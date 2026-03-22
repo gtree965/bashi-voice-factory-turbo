@@ -90,13 +90,13 @@
 
 为保证 Mac 的原生双击执行权限不丢失，请务必向 Mac 用户直接发送网盘上的 **`.tar.gz` 压缩包**（切勿在 Windows 电脑上解压后用 U 盘拷给他们）。
 
-1. 收到 `EdgeTTS-Mac-Linux-v3.0.tar.gz` 后，直接双击解压。
-2. 进入解压出的文件夹，直接双击运行 **`EdgeTTS-Mac-venv.command`**。
+1. 收到 `Bashi-Voice-Factory-v3.1-Mac-Linux.tar.gz` 后，直接双击解压。
+2. 进入解压出的文件夹，直接双击运行 **`Bashi-Voice-Factory-Mac.command`**。
 3. 如果弹出“无法验证开发者”的安全提示：打开 Mac 的 `系统设置 -> 隐私与安全性`，往下拉找到刚才被拦截的程序，点击`仍要打开`即可。
 
 ### 🐧 Linux 用户
 
-1. 解压 `EdgeTTS-Mac-Linux-v3.0.tar.gz` 压缩包。
+1. 解压 `Bashi-Voice-Factory-v3.1-Mac-Linux.tar.gz` 压缩包。
 2. 在终端中进入解压目录，运行 `./run_venv.sh` 即可（所有执行权限已在出厂时完全内置）。
 
 ---
@@ -281,3 +281,5 @@ Email: ncorecpu@gmail.com
 3. **阿里 SenseVoice 模型许可 (STT)**：多语种语音转文字引擎使用的 `SenseVoiceSmall` 模型由阿里达摩院发布，遵循 [FunASR 模型许可协议](https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE)。该协议**并非** Apache/MIT 开源协议，而是一份允许使用（包括商用）但附带特定条件的自定义模型许可。如需将 STT 转写结果用于商业用途，请务必自行审阅并遵守 FunASR 模型许可条款。
 4. **NVIDIA Parakeet TDT 模型许可 (STT)**：英文专用语音转文字引擎使用 NVIDIA 的 `Parakeet TDT 0.6B v2` 模型，遵循 [CC-BY-4.0 协议](https://creativecommons.org/licenses/by/4.0/)（允许商用，需注明出处）。sherpa-onnx 转换版本由 [csukuangfj](https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8) 提供。推理引擎 `sherpa-onnx` 遵循 [Apache 2.0 协议](https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE)。
 5. **输入内容与衍生版权免责**：本软件作为中间工具——TTS 部分将文本发送至微软 API 合成语音，STT 部分在本地处理音频转写。开发者不收集、无权限、也不具备能力审核您的任何输入内容。若用户处理受第三方版权保护的材料（如付费小说、已出版书籍、受版权保护的录音等），由此产生的任何版权侵权问题及法律纠纷，均由使用者本人全权自行承担。本软件及其开发者 (Alex Li) 概不承担任何连带法律责任。
+
+Edge TTS 为微软 (Microsoft) 产品。SenseVoice 为阿里达摩院产品。Parakeet TDT 为 NVIDIA 产品。

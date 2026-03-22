@@ -90,13 +90,13 @@ We have provided strictly zero-install, automated launchers for Windows, macOS, 
 
 To ensure the native macOS execution permissions are preserved, please distribute the `.tar.gz` archive directly to Mac users (DO NOT extract the folder on Windows and copy it over an exFAT USB drive).
 
-1. Double-click the `EdgeTTS-Mac-Linux-v3.0.tar.gz` file on your Mac to extract it.
-2. Open the extracted folder and simply double-click **`EdgeTTS-Mac-venv.command`**.
+1. Double-click the `Bashi-Voice-Factory-v3.1-Mac-Linux.tar.gz` file on your Mac to extract it.
+2. Open the extracted folder and simply double-click **`Bashi-Voice-Factory-Mac.command`**.
 3. If macOS blocks the app with an "Unidentified Developer" warning: Go to `System Settings -> Privacy & Security`, scroll down, and click `Open Anyway`.
 
 ### 🐧 Linux Users
 
-1. Extract the `EdgeTTS-Mac-Linux-v3.0.tar.gz` archive.
+1. Extract the `Bashi-Voice-Factory-v3.1-Mac-Linux.tar.gz` archive.
 2. Open your terminal, navigate directly into the extracted directory, and run `./run_venv.sh` (all executable `chmod +x` flags are already permanently baked into the archive!).
 
 ---
