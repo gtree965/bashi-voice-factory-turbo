@@ -1122,11 +1122,13 @@ async function downloadSelectedModel() {
                     const data = JSON.parse(dataStr);
                     
                     if (data.status === 'downloading') {
-                        fill.style.width = `${data.progress}%`;
-                        text.textContent = `Downloading ${data.file}... ${Math.round(data.progress)}%`;
+                        const pct = data.progress != null ? data.progress : 0;
+                        fill.style.width = `${pct}%`;
+                        const msg = state.currentLang === 'zh' && data.message_zh ? data.message_zh : (data.message || `Downloading ${data.file || ''}...`);
+                        text.textContent = data.file ? `${msg} (${data.file_index}/${data.total_files})` : msg;
                     } else if (data.status === 'done') {
                         fill.style.width = '100%';
-                        text.textContent = 'Download Complete!';
+                        text.textContent = state.currentLang === 'zh' ? '下载完成！' : 'Download Complete!';
                         await loadSttModels(); // refresh dropdown
                         setTimeout(() => {
                             elements.sttModelProgress.style.display = 'none';

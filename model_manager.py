@@ -159,11 +159,13 @@ class ModelManager:
                 url_order = [urls.get("url"), urls.get("mirror")]
             url_order = [u for u in url_order if u]  # remove None
 
+            progress = round((files_done / total_files) * 100, 1) if total_files > 0 else 0
             yield {
                 "status": "downloading",
                 "file": fname,
                 "file_index": files_done + 1,
                 "total_files": total_files,
+                "progress": progress,
                 "message": f"Downloading {fname}...",
                 "message_zh": f"正在下载 {fname}...",
             }
