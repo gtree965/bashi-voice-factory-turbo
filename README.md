@@ -1,8 +1,8 @@
 # Bashi Voice Factory (巴适声工厂)
 
-**Version:** 3.0
+**Version:** 3.1
 
-A beautiful web application for bidirectional voice conversion. The **TTS** (text-to-speech) side, powered by Microsoft Edge TTS, supports **14 languages** with 50+ neural voices, up to 50,000 characters of continuous long text, TXT file upload, multi-format export, and smart chunking for shadowing practice. **New in v3.0**: a fully local, offline **STT** (speech-to-text) engine powered by `sherpa-onnx` and Alibaba's `SenseVoice` model for private audio/video transcription.
+A beautiful web application for bidirectional voice conversion. The **TTS** (text-to-speech) side, powered by Microsoft Edge TTS, supports **14 languages** with 50+ neural voices, up to 50,000 characters of continuous long text, TXT file upload, multi-format export, and smart chunking for shadowing practice. The **STT** (speech-to-text) side features two production-grade offline engines: **SenseVoice** (multilingual: Chinese/English/Japanese/Korean/Cantonese) and **Parakeet TDT** (English specialist, NVIDIA, ~1.7% WER). All transcription runs locally — no audio is uploaded to the cloud.
 
 **Author:** Alex Li (ncorecpu@gmail.com)
 
@@ -12,10 +12,11 @@ A beautiful web application for bidirectional voice conversion. The **TTS** (tex
 
 ## ✨ Highlight Features
 
-### 🎙️ Local Offline Speech-to-Text (v3.0)
+### 🎙️ Local Offline Speech-to-Text (v3.1)
 - **High Privacy**: Convert meetings, lectures, and videos to text entirely on your local machine. No audio data is uploaded to the cloud!
-- **SenseVoice Core**: Powered by the lightweight `sherpa-onnx` engine and the robust `SenseVoiceSmall` AI model for lightning-fast and accurate transcription.
-- **Live Progress**: Features real-time Subtitle-by-Subtitle display using SSE (Server-Sent Events) and exports seamlessly to TXT, SRT, or VTT.
+- **Dual Engine**: **SenseVoice** (default, multilingual zh/en/ja/ko/yue, 242MB) + **Parakeet TDT** (English specialist, 661MB, NVIDIA). Both powered by the lightweight `sherpa-onnx` runtime.
+- **VAD-Based Segmentation**: Silero VAD precisely detects speech boundaries — zero overlap, zero stutter, accurate timestamps.
+- **Live Progress**: Features real-time subtitle-by-subtitle display using SSE (Server-Sent Events) and exports seamlessly to TXT, SRT, or VTT.
 
 ### 🌍 14-Language World Voice Expansion (v2.16)
 - **Global Coverage**: English, Chinese, Japanese, Korean, Hindi, Arabic, Bengali, Spanish, Portuguese, French, German, Russian, Hebrew, and Greek — with region-specific variants (US/UK/AU, Saudi/Egypt, Brazil/Portugal, etc.).
