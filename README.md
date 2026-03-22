@@ -154,6 +154,12 @@ Edit `app.py`, change `port=5050` to another port like `port=5001`
 
 ## 🔄 Changelog
 
+### v3.1 (2026-03-22)
+- 🎯 **Dual-Engine STT**: Streamlined to two production-grade models — **SenseVoice** (multilingual default: zh/en/ja/ko/yue, 242MB) and **Parakeet TDT** (English specialist by NVIDIA, ~1.7% WER, 661MB).
+- 🔧 **SenseVoice VAD Rewrite**: Replaced 30s chunk-based processing with Silero VAD segmentation. Eliminated all overlap/stutter artifacts, CER improved from 8.9% to 2.1% on Chinese.
+- 🦜 **Parakeet TDT Tuning**: Modified beam search (4 paths) and VAD threshold tuning for optimal English subtitle quality.
+- 🧹 **Model Cleanup**: Removed experimental models (Paraformer, Zipformer-CTC, FireRedASR) after comprehensive benchmarking.
+
 ### v3.0 (2026-03-17)
 - ✨ **Local Offline Speech-to-Text (STT)**: Completely private, fully local audio/video transcription using `sherpa-onnx` and `SenseVoiceSmall`.
 - 📁 **Universal Media Import**: Drag and drop MP4, MP3, WAV, M4A, OGG, or FLAC files directly for transcription.
@@ -246,10 +252,11 @@ To avoid potential copyright and intellectual property disputes, all users and s
 
 1. **Codebase License vs. Backend Service**: The client-side source code of this application (Python scripts, UI files, etc.) is open-sourced under the **MIT License**, which inherently permits commercial use of the code. However, you must understand that this application integrates third-party engines and models whose licenses are independent of the MIT License on this codebase.
 2. **Microsoft's Intellectual Property (TTS)**: The text-to-speech AI engine, the synthetic neural voice models (Neural Voices), and the cloud computing endpoints are the exclusive intellectual property of **Microsoft Corporation**. Whether the audio generated through this interface can be legally deployed for commercial or for-profit projects is strictly governed by [Microsoft's Terms of Use](https://www.microsoft.com/en-us/legal/terms-of-use).
-3. **Alibaba SenseVoice Model License (STT)**: The speech-to-text feature relies on the `SenseVoiceSmall` model released by Alibaba DAMO Academy under the [FunASR Model License](https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE). This is **not** an Apache/MIT license — it is a custom model license that permits use (including commercial use) under specific conditions. Users who intend to use the STT-derived output commercially must review and comply with the FunASR Model License terms. The `sherpa-onnx` inference runtime is licensed under [Apache 2.0](https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE).
-4. **Content Copyright & Operator Liability**: This software acts as a conduit — for TTS, it transmits text to Microsoft's API; for STT, it processes audio locally. The developer does not collect, monitor, nor possess the capability to police your inputs or outputs. If a user processes copyrighted materials (e.g., unauthorized audiobooks, premium articles, copyrighted recordings), the user assumes full legal responsibility. The software and its original author (Alex Li) disclaim all liability for content generated, transcribed, distributed, or monetized by its users.
+3. **Alibaba SenseVoice Model License (STT)**: The multilingual speech-to-text engine relies on the `SenseVoiceSmall` model released by Alibaba DAMO Academy under the [FunASR Model License](https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE). This is **not** an Apache/MIT license — it is a custom model license that permits use (including commercial use) under specific conditions. Users who intend to use the STT-derived output commercially must review and comply with the FunASR Model License terms.
+4. **NVIDIA Parakeet TDT Model License (STT)**: The English-specialist speech-to-text engine uses NVIDIA's `Parakeet TDT 0.6B v2` model, released under the [CC-BY-4.0 License](https://creativecommons.org/licenses/by/4.0/). This permits commercial use with attribution. The sherpa-onnx conversion is provided by [csukuangfj](https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8). The `sherpa-onnx` inference runtime is licensed under [Apache 2.0](https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE).
+5. **Content Copyright & Operator Liability**: This software acts as a conduit — for TTS, it transmits text to Microsoft's API; for STT, it processes audio locally. The developer does not collect, monitor, nor possess the capability to police your inputs or outputs. If a user processes copyrighted materials (e.g., unauthorized audiobooks, premium articles, copyrighted recordings), the user assumes full legal responsibility. The software and its original author (Alex Li) disclaim all liability for content generated, transcribed, distributed, or monetized by its users.
 
-Edge TTS is a product of Microsoft. SenseVoice is a product of Alibaba DAMO Academy.
+Edge TTS is a product of Microsoft. SenseVoice is a product of Alibaba DAMO Academy. Parakeet TDT is a product of NVIDIA.
 
 ---
 
@@ -265,7 +272,8 @@ Email: ncorecpu@gmail.com
 - Microsoft Edge TTS for the amazing neural voices
 - [edge-tts](https://github.com/rany2/edge-tts) Python library by rany2
 - [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) by the Next-gen Kaldi team for the offline STT runtime
-- [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) by Alibaba DAMO Academy for the speech recognition model
+- [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) by Alibaba DAMO Academy for the multilingual speech recognition model
+- [Parakeet TDT](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) by NVIDIA for the English speech recognition model
 - Flask for the web framework
 - The open-source community
 

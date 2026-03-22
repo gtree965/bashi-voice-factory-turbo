@@ -154,8 +154,14 @@
 
 ## 🔄 更新日志
 
+### v3.1 (2026-03-22)
+- 🎯 **双引擎 STT**: 精简为两个生产级模型 —— **SenseVoice**（多语种默认：中英日韩粤，242MB）和 **Parakeet TDT**（英文专用，NVIDIA出品，WER仅1.7%，661MB）。
+- 🔧 **SenseVoice VAD 重写**: 将30秒分块处理替换为 Silero VAD 语音分段。彻底消除重叠/卡顿，中文 CER 从 8.9% 降至 2.1%。
+- 🦜 **Parakeet TDT 调优**: 采用修改束搜索（4路径）和 VAD 阈值调优，优化英文字幕质量。
+- 🧹 **模型精简**: 经过全面基准测试后移除实验性模型（Paraformer、Zipformer-CTC、FireRedASR）。
+
 ### v3.0 (2026-03-17)
-- ✨ **本地离线语音转文字 (STT)**: 软件重生为“巴适声工厂”！基于 `sherpa-onnx` 和 `SenseVoiceSmall` 的完全隐私、纯本地运转的音视频转文本工具。
+- ✨ **本地离线语音转文字 (STT)**: 软件重生为”巴适声工厂”！基于 `sherpa-onnx` 和 `SenseVoiceSmall` 的完全隐私、纯本地运转的音视频转文本工具。
 - 📁 **全格式媒体导入**: 拖拽或选择 MP4、MP3、WAV、M4A 等音视频文件即可直接识别，自动通过底层提取音频提取。
 - ⚡ **实时字幕流**: 转写带有实时进度条显示，及时间戳字幕片段跟进滚动刷新（由 SSE 服务器推送技术实时支持）。
 - 📑 **专业字幕导出**: 支持一键导出并下载带有时间轴的字幕内容 (SRT / VTT)，或纯文本稿 (TXT)。
@@ -271,5 +277,6 @@ Email: ncorecpu@gmail.com
 
 1. **软件代码与第三方引擎的界限**：本项目的客户端源程序代码（Python 脚本、UI 前端界面等）基于 **MIT 协议** 免费开源，允许商业化使用。但本软件集成的第三方引擎和模型各有独立的许可协议，与本项目代码的 MIT 许可互不关联。
 2. **微软语音合成引擎的所有权 (TTS)**：文字转语音功能底层调用的语音合成技术、神经网络声音模型（Neural Voices）及云端算力，其知识产权与解释权均归属于 **Microsoft (微软公司)**。通过本软件生成的语音文件是否允许用于商业盈利项目，需严格遵守[微软官方的服务条款](https://www.microsoft.com/en-us/legal/terms-of-use)。
-3. **阿里 SenseVoice 模型许可 (STT)**：语音转文字功能使用的 `SenseVoiceSmall` 模型由阿里达摩院发布，遵循 [FunASR 模型许可协议](https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE)。该协议**并非** Apache/MIT 开源协议，而是一份允许使用（包括商用）但附带特定条件的自定义模型许可。如需将 STT 转写结果用于商业用途，请务必自行审阅并遵守 FunASR 模型许可条款。推理引擎 `sherpa-onnx` 遵循 [Apache 2.0 协议](https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE)。
-4. **输入内容与衍生版权免责**：本软件作为中间工具——TTS 部分将文本发送至微软 API 合成语音，STT 部分在本地处理音频转写。开发者不收集、无权限、也不具备能力审核您的任何输入内容。若用户处理受第三方版权保护的材料（如付费小说、已出版书籍、受版权保护的录音等），由此产生的任何版权侵权问题及法律纠纷，均由使用者本人全权自行承担。本软件及其开发者 (Alex Li) 概不承担任何连带法律责任。
+3. **阿里 SenseVoice 模型许可 (STT)**：多语种语音转文字引擎使用的 `SenseVoiceSmall` 模型由阿里达摩院发布，遵循 [FunASR 模型许可协议](https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE)。该协议**并非** Apache/MIT 开源协议，而是一份允许使用（包括商用）但附带特定条件的自定义模型许可。如需将 STT 转写结果用于商业用途，请务必自行审阅并遵守 FunASR 模型许可条款。
+4. **NVIDIA Parakeet TDT 模型许可 (STT)**：英文专用语音转文字引擎使用 NVIDIA 的 `Parakeet TDT 0.6B v2` 模型，遵循 [CC-BY-4.0 协议](https://creativecommons.org/licenses/by/4.0/)（允许商用，需注明出处）。sherpa-onnx 转换版本由 [csukuangfj](https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8) 提供。推理引擎 `sherpa-onnx` 遵循 [Apache 2.0 协议](https://github.com/k2-fsa/sherpa-onnx/blob/master/LICENSE)。
+5. **输入内容与衍生版权免责**：本软件作为中间工具——TTS 部分将文本发送至微软 API 合成语音，STT 部分在本地处理音频转写。开发者不收集、无权限、也不具备能力审核您的任何输入内容。若用户处理受第三方版权保护的材料（如付费小说、已出版书籍、受版权保护的录音等），由此产生的任何版权侵权问题及法律纠纷，均由使用者本人全权自行承担。本软件及其开发者 (Alex Li) 概不承担任何连带法律责任。
