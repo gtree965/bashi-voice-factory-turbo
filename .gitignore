@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Models (large binary files, downloaded at runtime)
+models/
+
+# Embedded Python (Windows portable distribution)
+python-3.12.10-embed-amd64/
+
+# Test artifacts
+_test_*.wav
+_test_*.srt
+test_out.wav
+
+# Test videos and official subtitles (large media files)
+*.mp4
+*.webm
+*-zh-Hans.srt
+*-转写-*.srt
+*_official_en.srt
+*zh-official.srt
+*-ENG-official.srt
+
+# Runtime files
+launch_log.txt
+static/audio/
+static/uploads/
+
+# Old bundles
+*.tar.gz
+
+# Claude Code
+.claude/
+
+# Dev logs
+DEVLOG_*.md
+
+# Old Mac launcher
+EdgeTTS-Mac-venv.command

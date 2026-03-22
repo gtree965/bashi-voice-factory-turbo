@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bashi Voice Factory v{{ version }} | 巴适声工厂</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+
+    <!-- Language Switcher -->
+    <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="en" onclick="switchLanguage('en')">EN</button>
+        <button class="lang-btn" data-lang="zh" onclick="switchLanguage('zh')">中文</button>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="/static/images/bashi_logo_v2.jpg" alt="Bashi Voice Factory Logo" onerror="this.src='data:image/svg+xml;utf8,<svg viewBox=\'0 0 24 24\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z\' fill=\'%23d4a373\'/><path d=\'M8 9.5a1.5 1.5 0 1 1 3 0v5a1.5 1.5 0 1 1-3 0v-5zm5 0a1.5 1.5 0 1 1 3 0v5a1.5 1.5 0 1 1-3 0v-5z\' fill=\'white\'/></svg>'">
+                </div>
+                <div class="logo-text">
+                    <h1 data-en="Bashi Voice Factory" data-zh="巴适声工厂">Bashi Voice Factory</h1>
+                    <p class="version">v{{ version }}</p>
+                    <p data-en="Professional Speech Recognition & Synthesis" data-zh="专业级语音合成与转写工作室">Professional Speech Recognition & Synthesis</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- App Tabs -->
+            <div class="app-tabs glass-panel">
+                <button class="app-tab active" data-tab="tts" onclick="switchAppTab('tts')">
+                    <span class="tab-icon">🗣️</span> <span data-en="Text to Speech" data-zh="文字转语音">Text to Speech</span>
+                </button>
+                <button class="app-tab" data-tab="stt" onclick="switchAppTab('stt')">
+                    <span class="tab-icon">👂</span> <span data-en="Speech to Text" data-zh="语音转文字">Speech to Text</span>
+                </button>
+            </div>
+
+            <!-- TTS Container -->
+            <div id="tts-container" class="app-view active">
+
+            <!-- Mode Selection -->
+            <section class="mode-section glass-panel">
+                <div class="section-header">
+                    <h2 data-en="Playback Mode" data-zh="播放模式">Playback Mode</h2>
+                </div>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="single" onclick="setPlaybackMode('single')">
+                        <span class="mode-icon">🔊</span>
+                        <span data-en="Single Audio" data-zh="整段播放">Single Audio</span>
+                    </button>
+                    <button class="mode-btn" data-mode="sentence" onclick="setPlaybackMode('sentence')">
+                        <span class="mode-icon">📝</span>
+                        <span data-en="Shadowing Chunks" data-zh="跟读片段">Shadowing Chunks</span>
+                    </button>
+                </div>
+                <p class="mode-hint" id="mode-hint"
+                    data-en="Great for shadowing practice! Text is split into short, repeatable chunks."
+                    data-zh="非常适合跟读练习！文本会被分割成短小的可重复片段。" style="display: none;">Great for shadowing practice!
+                </p>
+
+                <!-- Chunking Settings (NEW) -->
+                <div class="chunking-settings" id="chunking-settings" style="display: none;">
+                    <div class="setting-row">
+                        <label data-en="Chunk Size:" data-zh="片段长度:">Chunk Size:</label>
+                        <div class="chunk-presets">
+                            <button class="chunk-preset-btn" data-preset="short" onclick="setChunkingPreset('short')">
+                                <span data-en="Short" data-zh="短">Short</span>
+                                <small>(12)</small>
+                            </button>
+                            <button class="chunk-preset-btn active" data-preset="medium"
+                                onclick="setChunkingPreset('medium')">
+                                <span data-en="Medium" data-zh="中">Medium</span>
+                                <small>(15)</small>
+                            </button>
+                            <button class="chunk-preset-btn" data-preset="long" onclick="setChunkingPreset('long')">
+                                <span data-en="Long" data-zh="长">Long</span>
+                                <small>(20)</small>
+                            </button>
+                            <button class="chunk-preset-btn" data-preset="off" onclick="setChunkingPreset('off')">
+                                <span data-en="Off" data-zh="关">Off</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <label data-en="Line Breaks:" data-zh="换行处理:">Line Breaks:</label>
+                        <div class="newline-modes">
+                            <button class="newline-mode-btn active" data-mode="hard" onclick="setNewlineMode('hard')">
+                                <span data-en="Line" data-zh="逐行">Line</span>
+                            </button>
+                            <button class="newline-mode-btn" data-mode="flow" onclick="setNewlineMode('flow')">
+                                <span data-en="Paragraph" data-zh="段落">Paragraph</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="chunking-hint"
+                        data-en="💡 Tip: Line mode splits at every newline. Paragraph mode ignores wrapped line breaks."
+                        data-zh="💡 提示：逐行模式会把每个换行都当作分隔；段落模式会忽略自动换行（适合网页/邮件复制的折行）。">💡 Tip: Line mode splits at
+                        every newline. Paragraph mode ignores wrapped line breaks.</p>
+                </div>
+            </section>
+
+            <!-- Text Input Section -->
+            <section class="input-section glass-panel">
+                <div class="section-header">
+                    <h2 data-en="Your Text" data-zh="输入文本">Your Text</h2>
+                    <span class="char-count">0 / 50000</span>
+                </div>
+                <textarea id="text-input" placeholder="Enter your text here... / 在此输入文本..."
+                    data-placeholder-en="Enter your text here..." data-placeholder-zh="在此输入文本..."
+                    maxlength="50000"></textarea>
+                <div class="quick-texts">
+                    <button class="quick-text-btn"
+                        data-text="Hello! Welcome to Bashi Voice Factory. In shadowing mode, your text is split into short chunks for easy repetition. Each chunk plays one by one, and you can repeat any chunk by clicking on it."
+                        data-en="English Demo" data-zh="英文示例">English Demo</button>
+                    <button class="quick-text-btn" data-text="你好！欢迎使用巴适声工厂。在跟读模式下，文本会被自动切分成短小片段，每个片段播放后会自动暂停，你可以随时重复任何片段来练习发音。" data-en="Chinese Demo"
+                        data-zh="中文示例">Chinese Demo</button>
+                    <button class="upload-btn" id="upload-btn" data-en="📂 Upload .txt" data-zh="📂 上传纯文本 .txt">📂
+                        Upload
+                        .txt</button>
+                    <input type="file" id="file-input" accept=".txt" style="display: none;">
+                </div>
+                <div class="drop-zone-overlay" id="drop-zone">
+                    <span class="drop-zone-text" data-en="📄 Drop .txt file here" data-zh="📄 拖放 .txt 文件到此处">📄 Drop
+                        .txt file here</span>
+                </div>
+            </section>
+
+            <!-- Voice Selection -->
+            <section class="voice-section glass-panel">
+                <div class="section-header">
+                    <h2 data-en="Select Voice" data-zh="选择声音">Select Voice</h2>
+                </div>
+
+                <div class="voice-tabs">
+                    <button class="voice-tab active" data-category="en" data-en="English" data-zh="英文">English</button>
+                    <button class="voice-tab" data-category="zh" data-en="Chinese" data-zh="中文">Chinese</button>
+                    <button class="voice-tab" data-category="ja" data-en="日本語" data-zh="日语">日本語</button>
+                    <button class="voice-tab" data-category="ko" data-en="한국어" data-zh="韩语">한국어</button>
+                    <button class="voice-tab" data-category="hi" data-en="हिन्दी" data-zh="印地语">हिन्दी</button>
+                    <button class="voice-tab" data-category="ar" data-en="العربية" data-zh="阿拉伯语">العربية</button>
+                    <button class="voice-tab" data-category="bn" data-en="বাংলা" data-zh="孟加拉语">বাংলা</button>
+                    <button class="voice-tab" data-category="es" data-en="Español" data-zh="西班牙语">Español</button>
+                    <button class="voice-tab" data-category="pt" data-en="Português" data-zh="葡萄牙语">Português</button>
+                    <button class="voice-tab" data-category="fr" data-en="Français" data-zh="法语">Français</button>
+                    <button class="voice-tab" data-category="de" data-en="Deutsch" data-zh="德语">Deutsch</button>
+                    <button class="voice-tab" data-category="ru" data-en="Русский" data-zh="俄语">Русский</button>
+                    <button class="voice-tab" data-category="he" data-en="עברית" data-zh="希伯来语">עברית</button>
+                    <button class="voice-tab" data-category="el" data-en="Ελληνικά" data-zh="希腊语">Ελληνικά</button>
+                </div>
+
+                <div class="voice-grid" id="voice-grid">
+                    <!-- Voices will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Settings Panel -->
+            <section class="settings-section glass-panel">
+                <div class="section-header">
+                    <h2 data-en="Voice Settings" data-zh="语音设置">Voice Settings</h2>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label data-en="Speed" data-zh="语速">Speed</label>
+                        <div class="slider-container">
+                            <input type="range" id="rate-slider" min="-200" max="200" value="0">
+                            <span class="slider-value" id="rate-value">+0%</span>
+                        </div>
+                        <div class="slider-labels">
+                            <span data-en="Slower" data-zh="慢">Slower</span>
+                            <span data-en="Faster" data-zh="快">Faster</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <label data-en="Pitch" data-zh="音调">Pitch</label>
+                        <div class="slider-container">
+                            <input type="range" id="pitch-slider" min="-50" max="50" value="0">
+                            <span class="slider-value" id="pitch-value">+0Hz</span>
+                        </div>
+                        <div class="slider-labels">
+                            <span data-en="Lower" data-zh="低">Lower</span>
+                            <span data-en="Higher" data-zh="高">Higher</span>
+                        </div>
+                    </div>
+
+                    <!-- Sentence Mode Settings (NEW) -->
+                    <div class="setting-item sentence-setting" id="pause-setting" style="display: none;">
+                        <label data-en="Pause Between Chunks" data-zh="片段间停顿">Pause Between Chunks</label>
+                        <div class="slider-container">
+                            <input type="range" id="pause-slider" min="0" max="5" value="2" step="0.5">
+                            <span class="slider-value" id="pause-value">2s</span>
+                        </div>
+                        <div class="slider-labels">
+                            <span data-en="No pause" data-zh="无停顿">No pause</span>
+                            <span data-en="5 seconds" data-zh="5秒">5 seconds</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generate Button -->
+            <div class="generate-container">
+                <button id="generate-btn" class="generate-btn">
+                    <span class="btn-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0" stroke="currentColor" stroke-width="2" />
+                            <path d="M10 8l6 4-6 4V8z" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <span class="btn-text" id="generate-btn-text" data-en="Generate Speech" data-zh="生成语音">Generate
+                        Speech</span>
+                </button>
+
+                <div class="loading-indicator" id="loading">
+                    <div class="spinner"></div>
+                    <span data-en="Generating..." data-zh="正在生成...">Generating...</span>
+                </div>
+
+                <!-- Long Text Progress (NEW) -->
+                <div class="long-text-progress" id="long-text-progress"
+                    style="display: none; width: 100%; max-width: 400px; margin-top: var(--space-md);">
+
+                    <div
+                        style="display: flex; align-items: center; justify-content: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+                        <div class="spinner"></div>
+                        <span style="color: var(--text-primary); font-size: var(--font-size-base);"
+                            data-en="Generating..." data-zh="正在生成...">Generating...</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="long-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; margin-top: var(--space-sm); font-size: var(--font-size-sm); color: var(--text-secondary);">
+                        <span id="long-progress-text" data-en="Generating chunk 1..." data-zh="正在生成第 1 组...">Generating
+                            chunk 1...</span>
+                        <span id="long-progress-count">0 / 0</span>
+                    </div>
+                    <p class="progress-hint"
+                        data-en="Long text processing may take minutes. Please be patient."
+                        data-zh="长文本生成需要较长时间，请耐心等待。">Long text processing may take minutes. Please be patient.</p>
+                </div>
+            </div>
+
+            <!-- Single Audio Player -->
+            <section class="player-section glass-panel" id="player-section" style="display: none;">
+                <div class="section-header">
+                    <h2 data-en="Generated Audio" data-zh="生成的音频">Generated Audio</h2>
+                </div>
+
+                <div class="audio-player">
+                    <audio id="audio-player" controls></audio>
+                    <div class="download-group">
+                        <select id="format-select" class="format-select">
+                            <option value="mp3">MP3</option>
+                            <option value="wav">WAV</option>
+                            <option value="ogg">OGG</option>
+                            <option value="flac">FLAC</option>
+                        </select>
+                        <button id="download-btn" class="download-btn">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span data-en="Download" data-zh="下载">Download</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chunk Player -->
+            <section class="sentence-player-section glass-panel" id="sentence-player-section" style="display: none;">
+                <div class="section-header">
+                    <h2 data-en="Chunk Playback" data-zh="片段播放">Chunk Playback</h2>
+                    <span class="sentence-progress" id="sentence-progress">0 / 0</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+
+                <!-- Playback Controls -->
+                <div class="sentence-controls">
+                    <button class="control-btn play-all-btn" id="play-all-btn" onclick="playAllSentences()">
+                        <span>▶️</span>
+                        <span data-en="Play All" data-zh="全部播放">Play All</span>
+                    </button>
+                    <button class="control-btn pause-btn" id="pause-btn" onclick="pausePlayback()">
+                        <span>⏸️</span>
+                        <span data-en="Pause" data-zh="暂停">Pause</span>
+                    </button>
+                    <button class="control-btn reset-btn" id="reset-btn" onclick="resetPlayback()">
+                        <span>🔄</span>
+                        <span data-en="Reset" data-zh="重置">Reset</span>
+                    </button>
+                </div>
+
+                <!-- Sentence List -->
+                <div class="sentence-list" id="sentence-list">
+                    <!-- Chunks will be populated by JavaScript -->
+                </div>
+            </section>
+            
+            </div> <!-- End TTS Container -->
+
+            <!-- STT Container -->
+            <div id="stt-container" class="app-view">
+                <!-- Audio Input -->
+                <section class="stt-upload-section glass-panel">
+                    <div class="section-header">
+                        <h2 data-en="Audio/Video Input" data-zh="音视频输入">Audio/Video Input</h2>
+                    </div>
+                    <div class="upload-zone" id="stt-upload-zone" onclick="document.getElementById('stt-file-input').click()">
+                        <div class="upload-icon">📁</div>
+                        <p data-en="Click or drag media files here (mp4, mp3, wav, m4a, etc.)" 
+                           data-zh="点击或拖拽媒体文件到此处 (mp4, mp3, wav, m4a 等)">Click or drag media files here (mp4, mp3, wav, m4a, etc.)</p>
+                        <input type="file" id="stt-file-input" accept="audio/*,video/*" style="display: none;">
+                    </div>
+                    <div id="stt-selected-file" class="selected-file" style="display: none;">
+                        <span class="file-name" id="stt-filename-display">filename.mp3</span>
+                        <span class="file-size" id="stt-filesize-display"></span>
+                        <button class="clear-file-btn" onclick="clearSttFile(event)">✖</button>
+                    </div>
+                </section>
+
+                <!-- Model & Language -->
+                <section class="stt-settings-section glass-panel">
+                    <div class="section-header">
+                        <h2 data-en="Recognition Settings" data-zh="识别设置">Recognition Settings</h2>
+                    </div>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label data-en="Model" data-zh="模型">Model</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <select id="stt-model-select" class="format-select" style="flex: 1;" onchange="onSttModelChange()">
+                                    <option value="" disabled selected data-en="Loading models..." data-zh="加载模型中...">Loading models...</option>
+                                </select>
+                                <button id="stt-download-btn" class="download-btn" style="padding: 10px 20px; display: none;" onclick="downloadSelectedModel()">
+                                    <span data-en="Download" data-zh="下载">Download</span>
+                                </button>
+                            </div>
+                            <!-- Model Download Progress -->
+                            <div id="stt-model-progress" style="display: none; margin-top: 10px;">
+                                <div class="progress-bar" style="height: 4px;"><div class="progress-fill" id="model-dl-fill" style="width: 0%"></div></div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px; text-align: right;" id="model-dl-text">0%</div>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <label data-en="Language" data-zh="语言 (Language)">Language</label>
+                            <select id="stt-lang-select" class="format-select">
+                                <option value="auto" data-en="Auto Detect" data-zh="自动识别">Auto Detect</option>
+                                <option value="zh" data-en="Chinese" data-zh="中文">Chinese</option>
+                                <option value="en" data-en="English" data-zh="英语">English</option>
+                                <option value="ja" data-en="Japanese" data-zh="日语">Japanese</option>
+                                <option value="ko" data-en="Korean" data-zh="韩语">Korean</option>
+                                <option value="yue" data-en="Cantonese" data-zh="粤语">Cantonese</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transcribe Action -->
+                <div class="generate-container">
+                    <button id="stt-transcribe-btn" class="generate-btn" onclick="startTranscription()">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-text" id="stt-transcribe-btn-text" data-en="Start Transcription" data-zh="开始转写">Start Transcription</span>
+                    </button>
+                    
+                    <div class="loading-indicator" id="stt-loading">
+                        <div class="spinner"></div>
+                        <span id="stt-status-text" data-en="Processing..." data-zh="处理中...">Processing...</span>
+                    </div>
+
+                    <div class="long-text-progress" id="stt-job-progress" style="display: none; width: 100%; max-width: 600px; margin-top: 20px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+                            <div class="spinner"></div>
+                            <span style="color: var(--text-primary); font-size: var(--font-size-base);" id="stt-progress-title" data-en="Transcribing Audio..." data-zh="正在转写音频...">Transcribing Audio...</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill chunk-stream-anim" style="width: 100%; background: var(--accent-gradient);"></div>
+                        </div>
+                        <div id="stt-live-segments" class="live-segments-box">
+                            <!-- Live text scrolling box -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STT Result -->
+                <section class="stt-result-section glass-panel" id="stt-result-section" style="display: none;">
+                    <div class="section-header">
+                        <h2 data-en="Transcription Result" data-zh="转写结果">Transcription Result</h2>
+                    </div>
+                    <textarea id="stt-result-text" readonly></textarea>
+                    
+                    <div class="audio-player" style="margin-top: 20px; flex-direction: row; justify-content: space-between;">
+                        <button id="stt-copy-btn" class="download-btn" onclick="copySttResult()" style="margin-right: auto;">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;">
+                                <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span data-en="Copy All" data-zh="全部复制">Copy All</span>
+                        </button>
+                        <div class="download-group" style="margin-left: auto;">
+                            <select id="stt-export-format" class="format-select">
+                                <option value="txt">TXT</option>
+                                <option value="srt">SRT</option>
+                                <option value="vtt">VTT</option>
+                            </select>
+                            <button id="stt-export-btn" class="download-btn" onclick="exportTranscription()">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span data-en="Export" data-zh="导出">Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <!-- End STT Container -->
+
+            <!-- Donation Section / 打赏区域 -->
+            <section class="donation-section glass-panel">
+                <div class="donation-header" onclick="toggleDonation()">
+                    <span class="donation-icon">🚀</span>
+                    <h3 data-en="Support the Developer" data-zh="自愿打赏 · 给开发者加个「能量包」">Support the Developer</h3>
+                    <span class="donation-toggle" id="donation-toggle">▼</span>
+                </div>
+
+                <div class="donation-content" id="donation-content">
+                    <p class="donation-text"
+                        data-en="All features are free, development is powered by passion. If you find this tool useful, consider buying the developer a coffee to help us keep improving!"
+                        data-zh="功能全免费，开发全靠爱。如果你觉得这工具挺好用，可以请开发者喝杯咖啡，帮我们续命继续优化。">All features are free,
+                        development is powered by passion. If you find this tool useful, consider buying the developer a
+                        coffee to help us keep improving!</p>
+                    <p class="donation-subtext" data-en="Your support = Faster new features + Better experience ☕"
+                        data-zh="你的打赏 = 更快的新功能 + 更稳的体验 ☕">Your support = Faster new features + Better experience ☕</p>
+                    <p class="donation-note" data-en="Of course, any amount is welcome, totally voluntary~"
+                        data-zh="当然，金额随心，全凭自愿~">Of course, any amount is welcome, totally voluntary~</p>
+
+                    <div class="qr-codes" id="qr-codes">
+                        <div class="qr-item wechat">
+                            <img src="/static/images/wechat-pay.png" alt="WeChat Pay / 微信支付"
+                                onerror="this.parentElement.style.display='none'">
+                            <span class="qr-label" data-en="WeChat Pay" data-zh="微信支付">WeChat Pay</span>
+                        </div>
+                        <div class="qr-item alipay">
+                            <img src="/static/images/alipay.jpg" alt="Alipay / 支付宝"
+                                onerror="this.parentElement.style.display='none'">
+                            <span class="qr-label" data-en="Alipay" data-zh="支付宝">Alipay</span>
+                        </div>
+                    </div>
+                    <p class="qr-missing-hint" id="qr-missing-hint"
+                        style="display: none; text-align: center; color: var(--text-secondary); font-size: var(--font-size-sm);"
+                        data-en="To enable QR codes, add wechat-pay.png and alipay.jpg to static/images/"
+                        data-zh="如需显示二维码，请将 wechat-pay.png 和 alipay.jpg 放入 static/images/ 目录">To enable QR codes, add
+                        wechat-pay.png and alipay.jpg to static/images/</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p data-en="TTS: Microsoft Edge TTS | STT: sherpa-onnx + Alibaba SenseVoice" data-zh="语音合成: Microsoft Edge TTS | 语音识别: sherpa-onnx 引擎 + 阿里 SenseVoice 模型">TTS: Microsoft Edge TTS | STT: sherpa-onnx + Alibaba SenseVoice</p>
+            <p class="author-info" data-en="Created by Alex Li" data-zh="作者：Alex Li">Created by Alex Li</p>
+            <p class="author-email">ncorecpu@gmail.com</p>
+            <p class="license-info" data-en="Free for personal and educational use" data-zh="个人和教育用途均可免费使用">Free for
+                personal and educational use</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-message"></span>
+    </div>
+
+    <!-- Hidden audio for sentence playback -->
+    <audio id="sentence-audio" style="display: none;"></audio>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
