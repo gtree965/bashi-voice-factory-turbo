@@ -1,13 +1,13 @@
 #!/bin/bash
 # =======================================================
-# Bashi Voice Factory v3.0 - Linux/macOS Launcher (VENV)
+# Bashi Voice Factory v3.1 - Linux/macOS Launcher (VENV)
 # - Creates/uses .venv in the app folder
 # - Installs requirements.txt into that venv
 # - Runs the app with the venv Python
 # =======================================================
 
 echo "============================================"
-echo " Bashi Voice Factory v3.0 (venv launcher)"
+echo " Bashi Voice Factory v3.1 (venv launcher)"
 echo "============================================"
 echo ""
 
