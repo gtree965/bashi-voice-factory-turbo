@@ -243,7 +243,8 @@ Email: ncorecpu@gmail.com
 - 感谢微软 Edge TTS 提供优秀的神经网络语音
 - [edge-tts](https://github.com/rany2/edge-tts) Python library by rany2
 - [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) by Next-gen Kaldi 团队 — 离线语音识别推理引擎
-- [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) by 阿里达摩院 — 语音识别模型
+- [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) by 阿里达摩院 — 多语种语音识别模型
+- [Parakeet TDT](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) by NVIDIA — 英文语音识别模型
 - 感谢 Flask 网页框架
 - 感谢开源社区
 
