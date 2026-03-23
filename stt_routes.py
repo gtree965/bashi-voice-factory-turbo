@@ -29,6 +29,7 @@ engine_instance = None
 current_engine_model_id = None
 engine_lock = threading.Lock()
 _engine_ref_count = 0  # tracks active transcriptions using the engine
+_job_active = False    # set at request admission, cleared when worker finishes
 
 # Job cleanup: auto-expire jobs older than 24 hours
 JOB_MAX_AGE_SEC = 24 * 60 * 60
@@ -193,6 +194,10 @@ def _process_transcription(job_id: str, file_path: Path, filename: str, language
         stt_jobs[job_id]["status"] = "error"
         stt_jobs[job_id]["error"] = str(e)
     finally:
+        # Release the job slot so the next transcription can be accepted
+        global _job_active
+        with engine_lock:
+            _job_active = False
         # Cleanup temp uploaded file (original media) and extracted WAV
         if file_path.exists():
             file_path.unlink()
@@ -201,27 +206,34 @@ def _process_transcription(job_id: str, file_path: Path, filename: str, language
 
 @stt_bp.route("/transcribe", methods=["POST"])
 def transcribe():
-    # Reject early if a job is already running (before saving file to disk)
+    global _job_active
+
+    # Reserve the slot atomically — reject before saving file to disk
     with engine_lock:
-        if _engine_ref_count > 0:
+        if _job_active:
             return jsonify({"error": "A transcription is already in progress. "
                             "Please wait for it to finish."}), 429
+        _job_active = True
 
     if "file" not in request.files:
+        with engine_lock:
+            _job_active = False
         return jsonify({"error": "No file part"}), 400
 
     file = request.files["file"]
     if file.filename == "":
+        with engine_lock:
+            _job_active = False
         return jsonify({"error": "No selected file"}), 400
 
     language = request.form.get("language", "auto")
     model_id = request.form.get("model_id")
-    
+
     job_id = uuid.uuid4().hex
     safe_filename = secure_filename(file.filename) or f"upload_{job_id}.bin"
     file_path = UPLOAD_DIR / f"{job_id}_{safe_filename}"
     file.save(str(file_path))
-    
+
     stt_jobs[job_id] = {
         "job_id": job_id,
         "filename": file.filename,
@@ -231,15 +243,15 @@ def transcribe():
         "error": None,
         "created_at": time.time()
     }
-    
-    # Start background processing
+
+    # Start background processing (_job_active is cleared in the worker's finally)
     thread = threading.Thread(
         target=_process_transcription,
         args=(job_id, file_path, file.filename, language, model_id)
     )
     thread.daemon = True
     thread.start()
-    
+
     return jsonify({"success": True, "job_id": job_id})
 
 @stt_bp.route("/progress/<job_id>", methods=["GET"])
