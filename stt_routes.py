@@ -59,19 +59,19 @@ def acquire_engine(model_id=None):
     """Get engine for the given model and increment its ref count.
 
     The caller MUST call release_engine() when done to allow future
-    model swaps.  If a different model is requested while the current
-    engine is busy, a RuntimeError is raised instead of silently using
-    the wrong model.
+    model swaps.  Only one transcription job may run at a time because
+    sherpa_onnx's OfflineRecognizer is not guaranteed thread-safe for
+    concurrent decode_stream() calls on a shared instance.
     """
     global engine_instance, current_engine_model_id, _engine_ref_count
     with engine_lock:
+        if _engine_ref_count > 0:
+            raise RuntimeError(
+                "A transcription is already in progress. "
+                "Please wait for it to finish before starting another."
+            )
+
         if engine_instance is not None and current_engine_model_id != model_id:
-            if _engine_ref_count > 0:
-                raise RuntimeError(
-                    f"Model {current_engine_model_id} is busy "
-                    f"({_engine_ref_count} active job(s)). "
-                    "Please wait for the current transcription to finish."
-                )
             # Swap models: unload current to free up RAM
             print(f"[STT] Swapping active model from {current_engine_model_id} to {model_id}")
             try:
