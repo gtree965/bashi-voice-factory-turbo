@@ -55,16 +55,23 @@ def _cleanup_timer():
 _cleanup_thread = threading.Thread(target=_cleanup_timer, daemon=True)
 _cleanup_thread.start()
 
-def get_engine(model_id=None):
-    global engine_instance, current_engine_model_id
+def acquire_engine(model_id=None):
+    """Get engine for the given model and increment its ref count.
+
+    The caller MUST call release_engine() when done to allow future
+    model swaps.  If a different model is requested while the current
+    engine is busy, a RuntimeError is raised instead of silently using
+    the wrong model.
+    """
+    global engine_instance, current_engine_model_id, _engine_ref_count
     with engine_lock:
         if engine_instance is not None and current_engine_model_id != model_id:
             if _engine_ref_count > 0:
-                # Engine is in use by another job — reuse it to avoid
-                # tearing down a live transcription mid-stream
-                print(f"[STT] Engine {current_engine_model_id} in use "
-                      f"({_engine_ref_count} job(s)), reusing for this job")
-                return engine_instance
+                raise RuntimeError(
+                    f"Model {current_engine_model_id} is busy "
+                    f"({_engine_ref_count} active job(s)). "
+                    "Please wait for the current transcription to finish."
+                )
             # Swap models: unload current to free up RAM
             print(f"[STT] Swapping active model from {current_engine_model_id} to {model_id}")
             try:
@@ -86,7 +93,7 @@ def get_engine(model_id=None):
                     installed = model_manager.list_installed()
                     if installed:
                         model_id = installed[0]["id"]
-            
+
             if not model_id:
                 return None  # No models installed
 
@@ -98,14 +105,14 @@ def get_engine(model_id=None):
             meta = next((m for m in model_manager.list_installed() if m["id"] == model_id), None)
             if not meta:
                 return None
-                
+
             model_name_lower = meta.get("name", "").lower()
 
             if "parakeet" in model_name_lower:
                 engine_instance = SherpaParakeetEngine(model_dir)
             else:
                 engine_instance = SherpaSenseVoiceEngine(model_dir)
-                
+
             try:
                 engine_instance.load_model()
                 current_engine_model_id = model_id
@@ -113,8 +120,17 @@ def get_engine(model_id=None):
                 engine_instance = None
                 current_engine_model_id = None
                 print(f"Failed to load engine for {model_id}: {e}")
-                
-    return engine_instance
+                return None
+
+        _engine_ref_count += 1
+        return engine_instance
+
+
+def release_engine():
+    """Decrement the engine ref count, allowing future model swaps."""
+    global _engine_ref_count
+    with engine_lock:
+        _engine_ref_count = max(0, _engine_ref_count - 1)
 
 @stt_bp.route("/models", methods=["GET"])
 def list_models():
@@ -150,16 +166,13 @@ def _process_transcription(job_id: str, file_path: Path, filename: str, language
         # Step 1: Extract Audio
         extract_audio_wav(file_path, wav_path)
         
-        # Step 2: Ensure Engine is ready
+        # Step 2: Ensure Engine is ready (also increments ref count)
         stt_jobs[job_id]["status"] = "loading_model"
-        engine = get_engine(model_id)
+        engine = acquire_engine(model_id)
         if not engine:
             raise RuntimeError("Engine could not be loaded. Please ensure models are installed.")
 
-        # Step 3: Transcribe (hold ref count so engine isn't torn down mid-stream)
-        global _engine_ref_count
-        with engine_lock:
-            _engine_ref_count += 1
+        # Step 3: Transcribe
         try:
             stt_jobs[job_id]["status"] = "transcribing"
             for segment in engine.transcribe_stream(wav_path, language=language):
@@ -171,8 +184,7 @@ def _process_transcription(job_id: str, file_path: Path, filename: str, language
                 }
                 stt_jobs[job_id]["segments"].append(seg_dict)
         finally:
-            with engine_lock:
-                _engine_ref_count -= 1
+            release_engine()
 
         # Step 4: Done
         stt_jobs[job_id]["status"] = "done"
