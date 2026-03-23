@@ -215,6 +215,7 @@ def transcribe():
                             "Please wait for it to finish."}), 429
         _job_active = True
 
+    worker_started = False
     try:
         if "file" not in request.files:
             return jsonify({"error": "No file part"}), 400
@@ -244,18 +245,18 @@ def transcribe():
         # Start background processing (_job_active is cleared in the worker's finally)
         thread = threading.Thread(
             target=_process_transcription,
-            args=(job_id, file_path, file.filename, language, model_id)
+            args=(job_id, file_path, file.filename, language, model_id),
+            daemon=True,
         )
-        thread.daemon = True
         thread.start()
+        worker_started = True
 
         return jsonify({"success": True, "job_id": job_id})
 
-    except Exception:
-        # Release slot if anything fails before the worker starts
-        with engine_lock:
-            _job_active = False
-        raise
+    finally:
+        if not worker_started:
+            with engine_lock:
+                _job_active = False
 
 @stt_bp.route("/progress/<job_id>", methods=["GET"])
 def get_progress_sse(job_id):
