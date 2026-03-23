@@ -201,13 +201,19 @@ def _process_transcription(job_id: str, file_path: Path, filename: str, language
 
 @stt_bp.route("/transcribe", methods=["POST"])
 def transcribe():
+    # Reject early if a job is already running (before saving file to disk)
+    with engine_lock:
+        if _engine_ref_count > 0:
+            return jsonify({"error": "A transcription is already in progress. "
+                            "Please wait for it to finish."}), 429
+
     if "file" not in request.files:
         return jsonify({"error": "No file part"}), 400
-        
+
     file = request.files["file"]
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
-        
+
     language = request.form.get("language", "auto")
     model_id = request.form.get("model_id")
     
