@@ -193,6 +193,7 @@ def transcribe():
     stt_jobs[job_id] = {
         "job_id": job_id,
         "filename": file.filename,
+        "model_id": model_id,
         "status": "pending",
         "segments": [],
         "error": None,
@@ -257,6 +258,103 @@ def format_timestamp(seconds: float, separator: str = ",") -> str:
     return f"{h:02d}:{m:02d}:{s:02d}{separator}{ms:03d}"
 
 
+def _is_cjk(text: str) -> bool:
+    """Check if text is predominantly CJK (Chinese/Japanese/Korean)."""
+    for ch in text:
+        if '\u4e00' <= ch <= '\u9fff' or '\u3040' <= ch <= '\u30ff' or '\uac00' <= ch <= '\ud7af':
+            return True
+    return False
+
+
+def _smooth_join(buf_text: str, seg_text: str) -> str:
+    """Join two subtitle texts, smoothing punctuation at the boundary.
+
+    English: "What keeps us?" + "healthy and happy" -> "What keeps us healthy and happy"
+    Chinese: "军事力量" + "。" -> "军事力量。"  (no space, CJK join)
+    """
+    if not buf_text or not seg_text:
+        return (buf_text or "") + (seg_text or "")
+
+    buf_stripped = buf_text.rstrip()
+    cjk = _is_cjk(buf_stripped) or _is_cjk(seg_text)
+
+    # CJK: join without space, no punctuation smoothing needed
+    # (Chinese punctuation like 。，is usually correct from the model)
+    if cjk:
+        return buf_stripped + seg_text
+
+    # English: smooth false sentence breaks from VAD splits
+    first_alpha = next((c for c in seg_text if c.isalpha()), "")
+
+    if buf_stripped and buf_stripped[-1] in ".!?":
+        starts_lower = first_alpha.islower()
+        ends_question = buf_stripped[-1] == "?"
+
+        if starts_lower or ends_question:
+            # Remove false sentence-ending punctuation, lowercase continuation
+            buf_clean = buf_stripped[:-1].rstrip()
+            seg_clean = seg_text[0].lower() + seg_text[1:] if seg_text[0].isupper() else seg_text
+            return buf_clean + " " + seg_clean
+
+    return buf_text + " " + seg_text
+
+
+def merge_short_segments(segments: list, max_duration: float = 7.0) -> list:
+    """Merge short subtitle fragments into reader-friendly cards.
+
+    Merges consecutive segments when:
+    - The buffer is short, OR the new segment is tiny
+    - The gap between segments is small (<1.5s)
+    - The combined text fits within a char limit (80 English / 40 CJK)
+    - The combined duration stays under max_duration
+    """
+    if not segments:
+        return segments
+
+    # Detect CJK content from first segment with text
+    first_text = next((s["text"] for s in segments if s.get("text")), "")
+    cjk = _is_cjk(first_text)
+
+    # CJK chars are ~2x wider; use tighter thresholds
+    char_limit = 40 if cjk else 80
+    buf_short_limit = 6 if cjk else 42      # ~6 CJK chars = fragment
+    seg_tiny_limit = 4 if cjk else 20       # ~4 CJK chars = tiny
+
+    merged = [dict(segments[0])]
+
+    for seg in segments[1:]:
+        buf = merged[-1]
+        buf_chars = len(buf["text"])
+        buf_dur = buf["end"] - buf["start"]
+        seg_chars = len(seg["text"])
+        seg_dur = seg["end"] - seg["start"]
+        gap = seg["start"] - buf["end"]
+        combined = _smooth_join(buf["text"], seg["text"])
+        combined_dur = seg["end"] - buf["start"]
+
+        buf_short = buf_chars < buf_short_limit or buf_dur < 1.5
+        seg_tiny = seg_chars < seg_tiny_limit or seg_dur < 0.8
+        fits = len(combined) <= char_limit
+        close = gap < 1.5
+        duration_ok = combined_dur <= max_duration
+
+        if (buf_short or seg_tiny) and fits and close and duration_ok:
+            merged[-1] = {
+                "start": buf["start"],
+                "end": seg["end"],
+                "text": combined,
+                "index": buf["index"],
+            }
+        else:
+            merged.append(dict(seg))
+
+    # Re-index
+    for i, seg in enumerate(merged):
+        seg["index"] = i
+
+    return merged
+
+
 def fix_timestamp_overlaps(segments: list) -> list:
     """
     Post-process segments to ensure no timestamp overlaps.
@@ -291,7 +389,13 @@ def export_result(job_id):
     if not job or job["status"] != "done":
         return jsonify({"error": "Job not found or not finished"}), 404
 
-    segments = fix_timestamp_overlaps(job["segments"])
+    segments = job["segments"]
+    # Merge short fragments for subtitle formats — both Parakeet (English,
+    # many tiny VAD segments) and SenseVoice (Chinese, standalone punctuation
+    # fragments like 。) benefit from merging into reader-friendly cards.
+    if format_type in ("srt", "vtt"):
+        segments = merge_short_segments(segments)
+    segments = fix_timestamp_overlaps(segments)
     filename_base = Path(job["filename"]).stem
     suffix = "转写" if ui_lang == "zh" else "transcription"
 

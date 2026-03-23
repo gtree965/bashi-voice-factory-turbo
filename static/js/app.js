@@ -1015,6 +1015,7 @@ window.toggleDonation = toggleDonation;
 // STT functions
 window.switchAppTab = switchAppTab;
 window.onSttModelChange = onSttModelChange;
+window.onSttLangChange = onSttLangChange;
 window.downloadSelectedModel = downloadSelectedModel;
 window.clearSttFile = clearSttFile;
 window.startTranscription = startTranscription;
@@ -1073,7 +1074,7 @@ async function loadSttModels() {
 function onSttModelChange() {
     const opt = elements.sttModelSelect.options[elements.sttModelSelect.selectedIndex];
     if (!opt) return;
-    
+
     if (opt.dataset.installed === 'true') {
         elements.sttDownloadBtn.style.display = 'none';
         elements.sttTranscribeBtn.disabled = false;
@@ -1085,6 +1086,30 @@ function onSttModelChange() {
         elements.sttTranscribeBtn.style.opacity = '0.5';
         elements.sttTranscribeBtn.style.cursor = 'not-allowed';
     }
+}
+
+function onSttLangChange() {
+    const lang = elements.sttLangSelect.value;
+    // Auto-select best model for the chosen language
+    // Parakeet is English-only; SenseVoice handles all other languages
+    const preferParakeet = (lang === 'en');
+    const opts = elements.sttModelSelect.options;
+
+    for (let i = 0; i < opts.length; i++) {
+        const id = opts[i].value;
+        const isInstalled = opts[i].dataset.installed === 'true';
+        if (preferParakeet && id.includes('parakeet') && isInstalled) {
+            elements.sttModelSelect.value = id;
+            onSttModelChange();
+            return;
+        }
+        if (!preferParakeet && id.includes('sensevoice') && isInstalled) {
+            elements.sttModelSelect.value = id;
+            onSttModelChange();
+            return;
+        }
+    }
+    // If preferred model not installed, don't change selection
 }
 
 async function downloadSelectedModel() {
