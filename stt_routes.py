@@ -215,44 +215,47 @@ def transcribe():
                             "Please wait for it to finish."}), 429
         _job_active = True
 
-    if "file" not in request.files:
+    try:
+        if "file" not in request.files:
+            return jsonify({"error": "No file part"}), 400
+
+        file = request.files["file"]
+        if file.filename == "":
+            return jsonify({"error": "No selected file"}), 400
+
+        language = request.form.get("language", "auto")
+        model_id = request.form.get("model_id")
+
+        job_id = uuid.uuid4().hex
+        safe_filename = secure_filename(file.filename) or f"upload_{job_id}.bin"
+        file_path = UPLOAD_DIR / f"{job_id}_{safe_filename}"
+        file.save(str(file_path))
+
+        stt_jobs[job_id] = {
+            "job_id": job_id,
+            "filename": file.filename,
+            "model_id": model_id,
+            "status": "pending",
+            "segments": [],
+            "error": None,
+            "created_at": time.time()
+        }
+
+        # Start background processing (_job_active is cleared in the worker's finally)
+        thread = threading.Thread(
+            target=_process_transcription,
+            args=(job_id, file_path, file.filename, language, model_id)
+        )
+        thread.daemon = True
+        thread.start()
+
+        return jsonify({"success": True, "job_id": job_id})
+
+    except Exception:
+        # Release slot if anything fails before the worker starts
         with engine_lock:
             _job_active = False
-        return jsonify({"error": "No file part"}), 400
-
-    file = request.files["file"]
-    if file.filename == "":
-        with engine_lock:
-            _job_active = False
-        return jsonify({"error": "No selected file"}), 400
-
-    language = request.form.get("language", "auto")
-    model_id = request.form.get("model_id")
-
-    job_id = uuid.uuid4().hex
-    safe_filename = secure_filename(file.filename) or f"upload_{job_id}.bin"
-    file_path = UPLOAD_DIR / f"{job_id}_{safe_filename}"
-    file.save(str(file_path))
-
-    stt_jobs[job_id] = {
-        "job_id": job_id,
-        "filename": file.filename,
-        "model_id": model_id,
-        "status": "pending",
-        "segments": [],
-        "error": None,
-        "created_at": time.time()
-    }
-
-    # Start background processing (_job_active is cleared in the worker's finally)
-    thread = threading.Thread(
-        target=_process_transcription,
-        args=(job_id, file_path, file.filename, language, model_id)
-    )
-    thread.daemon = True
-    thread.start()
-
-    return jsonify({"success": True, "job_id": job_id})
+        raise
 
 @stt_bp.route("/progress/<job_id>", methods=["GET"])
 def get_progress_sse(job_id):
