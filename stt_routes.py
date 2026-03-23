@@ -28,6 +28,7 @@ stt_jobs = {}
 engine_instance = None
 current_engine_model_id = None
 engine_lock = threading.Lock()
+_engine_ref_count = 0  # tracks active transcriptions using the engine
 
 # Job cleanup: auto-expire jobs older than 24 hours
 JOB_MAX_AGE_SEC = 24 * 60 * 60
@@ -58,6 +59,12 @@ def get_engine(model_id=None):
     global engine_instance, current_engine_model_id
     with engine_lock:
         if engine_instance is not None and current_engine_model_id != model_id:
+            if _engine_ref_count > 0:
+                # Engine is in use by another job — reuse it to avoid
+                # tearing down a live transcription mid-stream
+                print(f"[STT] Engine {current_engine_model_id} in use "
+                      f"({_engine_ref_count} job(s)), reusing for this job")
+                return engine_instance
             # Swap models: unload current to free up RAM
             print(f"[STT] Swapping active model from {current_engine_model_id} to {model_id}")
             try:
@@ -148,18 +155,25 @@ def _process_transcription(job_id: str, file_path: Path, filename: str, language
         engine = get_engine(model_id)
         if not engine:
             raise RuntimeError("Engine could not be loaded. Please ensure models are installed.")
-            
-        # Step 3: Transcribe
-        stt_jobs[job_id]["status"] = "transcribing"
-        for segment in engine.transcribe_stream(wav_path, language=language):
-            seg_dict = {
-                "index": segment.index,
-                "start": segment.start,
-                "end": segment.end,
-                "text": segment.text
-            }
-            stt_jobs[job_id]["segments"].append(seg_dict)
-            
+
+        # Step 3: Transcribe (hold ref count so engine isn't torn down mid-stream)
+        global _engine_ref_count
+        with engine_lock:
+            _engine_ref_count += 1
+        try:
+            stt_jobs[job_id]["status"] = "transcribing"
+            for segment in engine.transcribe_stream(wav_path, language=language):
+                seg_dict = {
+                    "index": segment.index,
+                    "start": segment.start,
+                    "end": segment.end,
+                    "text": segment.text
+                }
+                stt_jobs[job_id]["segments"].append(seg_dict)
+        finally:
+            with engine_lock:
+                _engine_ref_count -= 1
+
         # Step 4: Done
         stt_jobs[job_id]["status"] = "done"
         

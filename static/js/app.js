@@ -1059,12 +1059,14 @@ async function loadSttModels() {
             
             elements.sttModelSelect.appendChild(opt);
             
-            // Default to SenseVoice if possible
+            // Default to SenseVoice as baseline
             if (m.id.includes('sensevoice') && isInstalled) {
                 elements.sttModelSelect.value = m.id;
             }
         });
-        
+
+        // Re-apply language-based model preference (e.g. Parakeet for English)
+        onSttLangChange();
         onSttModelChange();
     } catch (e) {
         console.error('Failed to load STT models', e);
