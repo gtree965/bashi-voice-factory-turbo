@@ -216,6 +216,9 @@ def transcribe():
         _job_active = True
 
     worker_started = False
+    job_id = None
+    file_path = None
+
     try:
         if "file" not in request.files:
             return jsonify({"error": "No file part"}), 400
@@ -239,7 +242,7 @@ def transcribe():
             "status": "pending",
             "segments": [],
             "error": None,
-            "created_at": time.time()
+            "created_at": time.time(),
         }
 
         # Start background processing (_job_active is cleared in the worker's finally)
@@ -257,6 +260,10 @@ def transcribe():
         if not worker_started:
             with engine_lock:
                 _job_active = False
+            if job_id is not None:
+                stt_jobs.pop(job_id, None)
+            if file_path is not None and file_path.exists():
+                file_path.unlink(missing_ok=True)
 
 @stt_bp.route("/progress/<job_id>", methods=["GET"])
 def get_progress_sse(job_id):
