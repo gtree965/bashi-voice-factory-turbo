@@ -4,6 +4,7 @@ import json
 import time
 import threading
 import urllib.parse
+import re
 from pathlib import Path
 from flask import Blueprint, request, jsonify, Response, stream_with_context, send_file
 from werkzeug.utils import secure_filename
@@ -410,6 +411,63 @@ def merge_short_segments(segments: list, max_duration: float = 7.0) -> list:
     return merged
 
 
+def normalize_subtitle_text(text: str) -> str:
+    """Normalize subtitle text for export.
+
+    - CJK-dominant text: remove punctuation; replace mid-sentence punctuation
+      with one full-width space U+3000; remove sentence-final punctuation.
+    - English-dominant text: keep punctuation unchanged.
+    """
+    if not text:
+        return text
+
+    # CJK subtitle style: remove punctuation, but keep a visual pause in the
+    # middle of a sentence using one full-width space.
+    full_width_space = "\u3000"
+    cjk_punctuation_chars = set("，。！？；：、《》【】「」『』〈〉〔〕“”‘’·…—–")
+    punctuation_chars = cjk_punctuation_chars | set(
+        ",.!?;:()[]{}<>"
+        "\"`/\\|_+=*&^%$#@~-"
+    )
+
+    if not _is_cjk(text) and not any(ch in cjk_punctuation_chars for ch in text):
+        return text
+
+    def is_word_internal_apostrophe(s: str, idx: int) -> bool:
+        if s[idx] != "'":
+            return False
+        if idx == 0 or idx == len(s) - 1:
+            return False
+        return s[idx - 1].isascii() and s[idx - 1].isalnum() and s[idx + 1].isascii() and s[idx + 1].isalnum()
+
+    def next_visible_char(s: str, start_idx: int) -> str:
+        for ch in s[start_idx:]:
+            if not ch.isspace():
+                return ch
+        return ""
+
+    out = []
+    for i, ch in enumerate(text):
+        if ch == "'" and is_word_internal_apostrophe(text, i):
+            out.append(ch)
+            continue
+
+        if ch in punctuation_chars:
+            next_ch = next_visible_char(text, i + 1)
+            if next_ch:
+                out.append(full_width_space)
+            continue
+
+        out.append(ch)
+
+    cleaned = "".join(out)
+    cleaned = re.sub(r" +", " ", cleaned)
+    cleaned = re.sub(rf"{full_width_space}+", full_width_space, cleaned)
+    cleaned = re.sub(rf" *{full_width_space} *", full_width_space, cleaned)
+    cleaned = cleaned.strip(" " + full_width_space)
+    return cleaned
+
+
 def fix_timestamp_overlaps(segments: list) -> list:
     """
     Post-process segments to ensure no timestamp overlaps.
@@ -460,19 +518,27 @@ def export_result(job_id):
         ext = "txt"
     elif format_type == "srt":
         lines = []
-        for i, seg in enumerate(segments, 1):
+        subtitle_segments = []
+        for seg in segments:
+            text = normalize_subtitle_text(seg["text"])
+            if text:
+                subtitle_segments.append((seg, text))
+        for i, (seg, text) in enumerate(subtitle_segments, 1):
             start = format_timestamp(seg["start"], ",")
             end = format_timestamp(seg["end"], ",")
-            lines.append(f"{i}\n{start} --> {end}\n{seg['text']}\n")
+            lines.append(f"{i}\n{start} --> {end}\n{text}\n")
         content = "\n".join(lines)
         mimetype = "application/x-subrip"
         ext = "srt"
     elif format_type == "vtt":
         lines = ["WEBVTT\n"]
         for seg in segments:
+            text = normalize_subtitle_text(seg["text"])
+            if not text:
+                continue
             start = format_timestamp(seg["start"], ".")
             end = format_timestamp(seg["end"], ".")
-            lines.append(f"{start} --> {end}\n{seg['text']}\n")
+            lines.append(f"{start} --> {end}\n{text}\n")
         content = "\n".join(lines)
         mimetype = "text/vtt"
         ext = "vtt"
@@ -484,4 +550,3 @@ def export_result(job_id):
     response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{urllib.parse.quote(export_filename)}"
     response.headers["Content-Type"] = f"{mimetype}; charset=utf-8"
     return response
-
