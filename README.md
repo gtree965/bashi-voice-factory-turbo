@@ -157,7 +157,6 @@ Edit `app.py`, change `port=5050` to another port like `port=5001`
 ### v3.11 (2026-04-08)
 - 🈶 **Chinese Edge TTS Text Patch**: Added a lightweight Chinese text preprocessor for Microsoft Edge TTS that normalizes classical chapter references, simplifies URLs/file paths, and fixes tricky phone formats such as `(010) 8888-9999`.
 - 🧾 **Subtitle Export Polish**: CJK subtitle exports now remove punctuation and preserve visual pauses with full-width spacing, while English subtitle punctuation remains intact.
-- 🧪 **Regression Coverage**: Added subtitle export regression tests and a dedicated TTS readback benchmark script using SenseVoice to evaluate Chinese Edge TTS behavior on high-value scenarios.
 
 ### v3.1 (2026-03-22)
 - 🎯 **Dual-Engine STT**: Streamlined to two production-grade models — **SenseVoice** (multilingual default: zh/en/ja/ko/yue, 242MB) and **Parakeet TDT** (English specialist by NVIDIA, ~1.7% WER, 661MB).
