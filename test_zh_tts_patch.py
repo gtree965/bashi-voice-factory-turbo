@@ -24,6 +24,23 @@ class ZhTtsPatchTests(unittest.TestCase):
         self.assertIn("3:30", result)
         self.assertNotIn("章", result)
 
+    def test_common_words_do_not_trigger_time_as_classical_ref(self):
+        cases = [
+            ("春节假期，2:30开会", "2:30", "第二章第三十节"),
+            ("文章篇目写完了，下午3:45开会", "3:45", "第三章第四十五节"),
+            ("试卷批完了，4:30休息", "4:30", "第四章第三十节"),
+            ("这个章节很难，下午5:15上课", "5:15", "第五章第十五节"),
+        ]
+        for text, time_token, bad_phrase in cases:
+            with self.subTest(text=text):
+                result = normalize_chinese_tts_text(text)
+                self.assertIn(time_token, result)
+                self.assertNotIn(bad_phrase, result)
+
+    def test_bracketed_classical_ref_is_recognized(self):
+        result = normalize_chinese_tts_text("古书（1:1）说")
+        self.assertEqual(result, "古书（第一章第一节）说")
+
     def test_phone_mobile(self):
         result = convert_phone_numbers("电话138-1234-5678")
         self.assertEqual(result, "电话一三八 一二三四 五六七八")
@@ -38,6 +55,16 @@ class ZhTtsPatchTests(unittest.TestCase):
             convert_filepaths(r"文件在C:\Users\Alex\Documents\bible.txt里"),
             "文件在bible.txt里",
         )
+
+    def test_windows_path_does_not_swallow_following_prose(self):
+        self.assertEqual(
+            convert_filepaths(r"at C:\Users\Alex\Docs is a nice folder"),
+            "at Docs is a nice folder",
+        )
+
+    def test_unix_path_does_not_swallow_chinese_slash_list(self):
+        self.assertEqual(convert_filepaths("他要/爬山/跑步/游泳"), "他要/爬山/跑步/游泳")
+        self.assertEqual(convert_filepaths("爱好/运动/阅读/旅行"), "爱好/运动/阅读/旅行")
 
     def test_cleanup_punctuation(self):
         self.assertEqual(cleanup_punctuation("等一下……马上来——真的。"), "等一下，马上来，真的。")
@@ -55,6 +82,14 @@ class ZhTtsPatchTests(unittest.TestCase):
     def test_classical_ref_context_guard(self):
         result = convert_classical_references("下午2:30开会")
         self.assertEqual(result, "下午2:30开会")
+
+    def test_international_prefix_does_not_touch_non_phone_values(self):
+        self.assertEqual(convert_phone_numbers("增长了+86.5%"), "增长了+86.5%")
+        self.assertEqual(convert_phone_numbers("结果为+86分"), "结果为+86分")
+
+    def test_short_number_does_not_touch_decimal_or_headcount(self):
+        self.assertEqual(convert_phone_numbers("114.5 元"), "114.5 元")
+        self.assertEqual(convert_phone_numbers("这是110个人"), "这是110个人")
 
 
 if __name__ == "__main__":

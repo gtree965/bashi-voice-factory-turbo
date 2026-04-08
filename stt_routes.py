@@ -424,6 +424,13 @@ def normalize_subtitle_text(text: str) -> str:
     # CJK subtitle style: remove punctuation, but keep a visual pause in the
     # middle of a sentence using one full-width space.
     full_width_space = "\u3000"
+    protected_patterns = re.compile(
+        r"(https?://\S+|www\.\S+|"
+        r"[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+(?:/[A-Za-z0-9_./%-]*)?|"
+        r"(?<!\d)\d{1,2}:\d{2}(?::\d{2})?(?!\d)|"
+        r"\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b|"
+        r"\b\d+\.\d+\b)"
+    )
     cjk_punctuation_chars = set("，。！？；：、《》【】「」『』〈〉〔〕“”‘’·…—–")
     punctuation_chars = cjk_punctuation_chars | set(
         ",.!?;:()[]{}<>"
@@ -446,6 +453,15 @@ def normalize_subtitle_text(text: str) -> str:
                 return ch
         return ""
 
+    protected = {}
+
+    def protect_match(match: re.Match) -> str:
+        key = f"\uFFF0{len(protected)}\uFFF1"
+        protected[key] = match.group(0)
+        return key
+
+    text = protected_patterns.sub(protect_match, text)
+
     out = []
     for i, ch in enumerate(text):
         if ch == "'" and is_word_internal_apostrophe(text, i):
@@ -465,6 +481,8 @@ def normalize_subtitle_text(text: str) -> str:
     cleaned = re.sub(rf"{full_width_space}+", full_width_space, cleaned)
     cleaned = re.sub(rf" *{full_width_space} *", full_width_space, cleaned)
     cleaned = cleaned.strip(" " + full_width_space)
+    for key, value in protected.items():
+        cleaned = cleaned.replace(key, value)
     return cleaned
 
 

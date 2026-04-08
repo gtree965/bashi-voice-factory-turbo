@@ -33,9 +33,10 @@ class TtsPatchOptions:
 _CLASSICAL_REF_BOOK_ENDINGS = set("记音篇书传歌录言训诗")
 _CLASSICAL_REF_EXCLUSIONS = {"游记", "日记", "笔记", "传记", "手记", "札记", "随笔录"}
 _CLASSICAL_REF_KEYWORDS = {
-    "章节", "篇", "节", "注释", "古籍", "古文", "篇目", "卷",
+    "古籍", "古文", "注释", "篇注", "卷注", "引文", "出处",
 }
 _PIAN_UNIT_NAMES = {"诗篇", "诗"}
+_LEFT_BRACKETS = "（([【「『《<"
 _DIGIT_MAP = {
     "0": "零", "1": "一", "2": "二", "3": "三", "4": "四",
     "5": "五", "6": "六", "7": "七", "8": "八", "9": "九",
@@ -63,12 +64,13 @@ _RE_URL = re.compile(
     r"(?:[/\w.?=&#%-]*)"
 )
 _RE_WIN_PATH = re.compile(
-    r"[A-Za-z]:[\\]"
-    r"[\w\\. -]+"
+    r"[A-Za-z]:\\"
+    r"(?:[A-Za-z0-9_.-]+\\)*"
+    r"[A-Za-z0-9_.-]+"
 )
 _RE_UNIX_PATH = re.compile(
-    r"(?<![a-zA-Z0-9])"
-    r"(/[\w.-]+){2,}"
+    r"(?<![A-Za-z0-9])"
+    r"(?:/[A-Za-z0-9_.-]+){2,}"
 )
 _RE_ELLIPSIS = re.compile(r"[…]{1,}|\.{3,}")
 _RE_DASH = re.compile(r"[—–]{2,}")
@@ -101,13 +103,18 @@ _RE_CN_LANDLINE_PAREN = re.compile(
     r"(?!\d)"
 )
 _RE_INTL_PREFIX = re.compile(
+    r"(?<![\d.])"
     r"(\+\d{1,4})"
+    r"(?=(?:[-–\s]?\d{3,}))"
     r"[-–\s]?"
 )
 _RE_SHORT_NUMBER = re.compile(
     r"(?<!\d)"
     r"(1(?:10|19|20|22)|12315|12345|114|120|122|999|911|112)"
-    r"(?!\d)"
+    r"(?![\d.])"
+)
+_RE_PHONE_CONTEXT = re.compile(
+    r"(电话|拨打|热线|客服|座机|手机|号码|号是|号为|联系|回电|办公室|报警|火警|急救|订票)"
 )
 
 
@@ -153,15 +160,19 @@ def _digits_grouped(digits: str, group_size: int = 4) -> str:
 def _has_classical_ref_context(text: str, match_start: int) -> bool:
     window_start = max(0, match_start - 20)
     before = text[window_start:match_start].rstrip()
+    trimmed = before
+    while trimmed and trimmed[-1] in _LEFT_BRACKETS:
+        trimmed = trimmed[:-1].rstrip()
 
     for excl in _CLASSICAL_REF_EXCLUSIONS:
-        if before.endswith(excl):
+        if trimmed.endswith(excl):
             return False
 
-    if before and before[-1] in _CLASSICAL_REF_BOOK_ENDINGS:
+    if trimmed and trimmed[-1] in _CLASSICAL_REF_BOOK_ENDINGS:
         return True
 
-    return any(keyword in text for keyword in _CLASSICAL_REF_KEYWORDS)
+    local_window = text[max(0, match_start - 12): min(len(text), match_start + 12)]
+    return any(keyword in local_window for keyword in _CLASSICAL_REF_KEYWORDS)
 
 
 def _uses_pian_unit(text: str, match_start: int) -> bool:
@@ -229,6 +240,11 @@ def convert_filepaths(text: str) -> str:
 
 
 def convert_phone_numbers(text: str) -> str:
+    def _has_phone_context(match: re.Match, window: int = 10) -> bool:
+        before = text[max(0, match.start() - window):match.start()]
+        after = text[match.end(): min(len(text), match.end() + window)]
+        return bool(_RE_PHONE_CONTEXT.search(before) or _RE_PHONE_CONTEXT.search(after))
+
     def _replace_landline_paren(match: re.Match) -> str:
         area = _digits_to_chinese(match.group(1))
         first = _digits_to_chinese(match.group(2))
@@ -252,6 +268,8 @@ def convert_phone_numbers(text: str) -> str:
         return f"{area} {number}"
 
     def _replace_short(match: re.Match) -> str:
+        if not _has_phone_context(match):
+            return match.group(0)
         return _digits_to_chinese(match.group(1))
 
     text = _RE_CN_LANDLINE_PAREN.sub(_replace_landline_paren, text)

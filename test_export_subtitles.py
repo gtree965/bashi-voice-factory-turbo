@@ -106,6 +106,27 @@ class SubtitleExportTests(unittest.TestCase):
         self.assertNotIn("今天是 Monday，天气不错。", content)
         self.assertNotIn("\n！\n", content)
 
+    def test_srt_export_preserves_urls_times_and_formatted_numbers(self):
+        self.add_job(
+            "job-srt-protected",
+            [
+                {"index": 0, "start": 0.0, "end": 1.0, "text": "访问 https://example.com/docs 查看。"},
+                {"index": 1, "start": 2.0, "end": 3.0, "text": "收入是 1,234.56 元。"},
+                {"index": 2, "start": 4.0, "end": 5.0, "text": "下午3:30开会。"},
+            ],
+        )
+
+        response = self.client.get("/api/stt/export/job-srt-protected?format=srt&lang=zh")
+
+        self.assertEqual(response.status_code, 200)
+        content = response.get_data(as_text=True)
+        self.assertIn("访问 https://example.com/docs 查看", content)
+        self.assertIn("收入是 1,234.56 元", content)
+        self.assertIn("下午3:30开会", content)
+        self.assertNotIn("https　example　com", content)
+        self.assertNotIn("1　234　56", content)
+        self.assertNotIn("3　30", content)
+
 
 if __name__ == "__main__":
     unittest.main()
