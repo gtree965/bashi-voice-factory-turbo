@@ -1,6 +1,10 @@
 """
-巴适声工厂 (Bashi Voice Factory) v3.1
+巴适声工厂 (Bashi Voice Factory) v3.11
 A bilingual text-to-speech and speech-to-text web interface.
+
+New in v3.11:
+- Chinese subtitle export polish: CJK subtitle punctuation removal with full-width spacing, while English subtitle punctuation stays intact
+- Chinese Edge TTS text patch: classical chapter references, URLs/file paths, and tricky phone formats are normalized before synthesis
 
 New in v3.1:
 - Streamlined to 2 production STT models: SenseVoice (multilingual) + Parakeet TDT (English)
@@ -79,8 +83,8 @@ if __name__ == "__main__":
     
     print("=" * 50)
     print(f"Bashi Voice Factory v{VERSION} (巴适声工厂)")
-    print("NEW in v3.1: SenseVoice (multilingual) + Parakeet TDT (best English)!")
-    print("v3.1 新功能: SenseVoice多语言 + Parakeet英文专用模型!")
+    print("NEW in v3.11: Better subtitle export + smarter Chinese Edge TTS text patching!")
+    print("v3.11 新功能: 字幕导出优化 + 中文微软TTS文本预处理补丁!")
     print("=" * 50)
     
     if args.host == "0.0.0.0":

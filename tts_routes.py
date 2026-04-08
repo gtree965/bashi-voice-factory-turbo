@@ -59,6 +59,7 @@ from flask import render_template, request, jsonify, send_from_directory, Respon
 import edge_tts
 import imageio_ffmpeg
 import subprocess
+from zh_tts_patch import normalize_chinese_tts_text
 
 tts_bp = Blueprint("tts", __name__)
 
@@ -517,14 +518,34 @@ def split_into_sentences(text: str) -> list:
     return split_into_chunks(text, max_words=0, newline_hard=True)
 
 
+def should_apply_zh_tts_patch(text: str, voice: str) -> bool:
+    """Return True when Chinese Edge TTS text patching should be applied."""
+    if not text.strip():
+        return False
+    if not voice.startswith("zh-"):
+        return False
+    return bool(re.search(r'[\u4e00-\u9fff]', text))
+
+
+def prepare_tts_text(text: str, voice: str) -> str:
+    """Prepare text for TTS, applying Chinese patch rules only when needed."""
+    if should_apply_zh_tts_patch(text, voice):
+        patched = normalize_chinese_tts_text(text)
+        if patched != text:
+            print(f"[TTS zh-patch] {text[:80]!r} -> {patched[:80]!r}")
+        return patched
+    return text
+
+
 async def generate_speech(text: str, voice: str, rate: str = "+0%", pitch: str = "+0Hz", max_retries: int = 3) -> str:
     """Generate speech using Edge TTS and return the file path, with automatic retries."""
     filename = f"{uuid.uuid4().hex}.mp3"
     output_path = OUTPUT_DIR / filename
+    prepared_text = prepare_tts_text(text, voice)
     
     for attempt in range(max_retries):
         try:
-            communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
+            communicate = edge_tts.Communicate(prepared_text, voice, rate=rate, pitch=pitch)
             await communicate.save(str(output_path))
             return filename
         except (OSError, ConnectionError, asyncio.TimeoutError) as e:
@@ -545,11 +566,12 @@ async def generate_sentence_audio(sentences: list, voice: str, rate: str = "+0%"
         if sentence.strip():
             filename = f"{uuid.uuid4().hex}_s{i}.mp3"
             output_path = OUTPUT_DIR / filename
+            prepared_sentence = prepare_tts_text(sentence, voice)
             
             # Retry loop for each sentence chunk
             for attempt in range(max_retries):
                 try:
-                    communicate = edge_tts.Communicate(sentence, voice, rate=rate, pitch=pitch)
+                    communicate = edge_tts.Communicate(prepared_sentence, voice, rate=rate, pitch=pitch)
                     await communicate.save(str(output_path))
                     break  # Success, exit retry loop
                 except (OSError, ConnectionError, asyncio.TimeoutError) as e:
@@ -812,6 +834,5 @@ def download_audio(filename):
 def serve_audio(filename):
     """Serve audio files."""
     return send_from_directory(OUTPUT_DIR, filename)
-
 
 
