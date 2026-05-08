@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal EnableExtensions EnableDelayedExpansion
 
 REM =========================================================
-REM Bashi Voice Factory v3.1 - USB Portable Launcher
+REM Bashi Voice Factory v3.11 - USB Portable Launcher
 REM =========================================================
 
 cd /d "%~dp0"
@@ -17,8 +17,8 @@ set "EMBED_DIR=python-3.12.10-embed-amd64"
 set "PYTHON_EXE=%EMBED_DIR%\python.exe"
 
 echo ========================================================
-echo  Bashi Voice Factory v3.1 (USB Portable Edition)
-echo  Bashi Voice Factory v3.1  便携版
+echo  Bashi Voice Factory v3.11 (USB Portable Edition)
+echo  Bashi Voice Factory v3.11  便携版
 echo ========================================================
 
 REM 1. Check if the embedded Python folder exists
@@ -61,21 +61,37 @@ if not exist "%EMBED_DIR%\Scripts\pip.exe" (
     del get-pip.py
 )
 
-REM 4. Install Dependencies
+REM 4. Detect China region for pip mirror
+set "PIP_MIRROR_ARGS="
+for /f "tokens=*" %%T in ('tzutil /g 2^>nul') do (
+    echo %%T | findstr /i "China Standard" >nul 2>&1
+    if not errorlevel 1 (
+        set "PIP_MIRROR_ARGS=-i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com"
+        echo [INFO] 检测到中国时区，将使用阿里云镜像加速 pip 下载。
+        echo [INFO] China timezone detected. Using Aliyun pip mirror.
+    )
+)
+
+REM 5. Install Dependencies
 echo.
 echo [INFO] Checking dependencies [edge-tts, flask, etc.]...
 echo       正在检查依赖组件...
 echo.
 echo [STEP] Installing dependencies... >> "%LOGFILE%"
-"%PYTHON_EXE%" -m pip install -r requirements.txt --no-warn-script-location 2>> "%LOGFILE%"
+"%PYTHON_EXE%" -m pip install -r requirements.txt --only-binary :all: --no-warn-script-location %PIP_MIRROR_ARGS% 2>> "%LOGFILE%"
 if errorlevel 1 (
-    echo [ERROR] Failed to install dependencies from requirements.txt.
-    echo         依赖组件安装失败。
-    echo Please check your internet connection.
-    echo 请检查网络连接。
-    echo [ERROR] pip install failed >> "%LOGFILE%"
-    pause
-    exit /b 1
+    echo [WARN] First install attempt failed, retrying without cache...
+    echo        首次安装失败，正在清除缓存重试...
+    "%PYTHON_EXE%" -m pip install -r requirements.txt --only-binary :all: --no-cache-dir --no-warn-script-location %PIP_MIRROR_ARGS% 2>> "%LOGFILE%"
+    if errorlevel 1 (
+        echo [ERROR] Failed to install dependencies from requirements.txt.
+        echo         依赖组件安装失败。
+        echo Please check your internet connection.
+        echo 请检查网络连接。
+        echo [ERROR] pip install failed >> "%LOGFILE%"
+        pause
+        exit /b 1
+    )
 )
 echo [OK] Dependencies installed >> "%LOGFILE%"
 
@@ -99,8 +115,20 @@ if errorlevel 2 goto :skip_model_download
 
 echo Downloading ASR model...
 echo 正在下载语音识别模型...
-"%PYTHON_EXE%" download_model.py
+"%PYTHON_EXE%" download_model.py 2>> "%LOGFILE%"
+if errorlevel 1 goto :model_download_failed
 echo.
+goto :after_model_download
+
+:model_download_failed
+echo [WARN] ASR model download failed during launcher setup.
+echo        启动器中的语音识别模型下载失败。
+echo You can still start the app and download the model later from the STT page.
+echo 你仍然可以先启动软件，稍后在 STT 页面里下载模型。
+echo [WARN] download_model.py failed during launcher setup >> "%LOGFILE%"
+echo.
+
+:after_model_download
 
 :skip_model_download
 

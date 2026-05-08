@@ -1,5 +1,10 @@
 """Helper script for run_portable.bat to download the default ASR model."""
+import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from model_manager import ModelManager
 
 mm = ModelManager(Path("models"))

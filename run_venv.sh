@@ -1,13 +1,13 @@
 #!/bin/bash
 # =======================================================
-# Bashi Voice Factory v3.1 - Linux/macOS Launcher (VENV)
+# Bashi Voice Factory v3.11 - Linux/macOS Launcher (VENV)
 # - Creates/uses .venv in the app folder
 # - Installs requirements.txt into that venv
 # - Runs the app with the venv Python
 # =======================================================
 
 echo "============================================"
-echo " Bashi Voice Factory v3.1 (venv launcher)"
+echo " Bashi Voice Factory v3.11 (venv launcher)"
 echo "============================================"
 echo ""
 
@@ -45,8 +45,10 @@ if ! $PYTHON_CMD -c "import venv, ensurepip" &> /dev/null; then
         read -p "Would you like to automatically install '${VENV_PKG}'? (Requires sudo password) [y/N]: " auto_install
         
         if [[ "$auto_install" =~ ^[Yy]$ ]]; then
-            echo "[INFO] Running: sudo apt update && sudo apt install -y ${VENV_PKG}"
-            sudo apt update && sudo apt install -y "${VENV_PKG}"
+            echo "[INFO] Running: sudo apt-get update (partial failures from unrelated repos are OK)"
+            sudo apt-get update || true
+            echo "[INFO] Running: sudo apt-get install -y ${VENV_PKG}"
+            sudo apt-get install -y "${VENV_PKG}"
             
             # Verify if installation succeeded
             if ! $PYTHON_CMD -c "import venv, ensurepip" &> /dev/null; then
@@ -87,14 +89,51 @@ if [ ! -f "$PYTHON_VENV" ]; then
     exit 1
 fi
 
+# --- Detect China region for pip mirror ---
+PIP_MIRROR_ARGS=""
+_detect_china() {
+    # Check timezone
+    local tz
+    tz=$(readlink /etc/localtime 2>/dev/null || cat /etc/timezone 2>/dev/null || echo "")
+    case "$tz" in
+        *Shanghai*|*Chongqing*|*Harbin*|*Urumqi*|*Taipei*|*Hong_Kong*|*CST*|*Asia/Macau*)
+            return 0 ;;
+    esac
+    # Check locale
+    local loc="${LANG:-}${LC_ALL:-}"
+    case "$loc" in
+        zh_CN*|zh_TW*|zh_HK*)
+            return 0 ;;
+    esac
+    return 1
+}
+
+if _detect_china; then
+    echo ""
+    echo "[INFO] 检测到中国时区/语言环境，将使用阿里云镜像加速 pip 下载。"
+    echo "[INFO] Detected China timezone/locale. Using Aliyun pip mirror for faster downloads."
+    PIP_MIRROR_ARGS="-i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com"
+else
+    # Offer manual choice for users behind a firewall but not auto-detected
+    echo ""
+    echo "Are you in China? Use Aliyun mirror for faster pip downloads?"
+    echo "您在中国吗？使用阿里云镜像加速 pip 下载？"
+    echo "[y] Yes / 是   [n] No / 否 (Default)"
+    read -t 8 -p "Select / 请选择 [y/N]: " use_mirror
+    if [[ "$use_mirror" =~ ^[Yy]$ ]]; then
+        PIP_MIRROR_ARGS="-i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com"
+        echo "[INFO] Using Aliyun pip mirror."
+    fi
+fi
+
 # --- Check if dependencies already installed ---
-$PYTHON_VENV -c "import flask, edge_tts, imageio_ffmpeg" >/dev/null 2>&1
+$PYTHON_VENV -c "import flask, edge_tts, imageio_ffmpeg, sherpa_onnx, numpy" >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     # Already installed
     true
 else
     echo "[INFO] Installing / updating dependencies..."
-    
+
     # 1. Fallback: If pip is missing from the venv (common in Debian/Ubuntu split packages), try to bootstrap it
     if ! $PYTHON_VENV -m pip --version >/dev/null 2>&1; then
         echo "[INFO] pip is missing in venv. Bootstrapping via ensurepip..."
@@ -102,9 +141,11 @@ else
     fi
 
     # 2. Use python -m pip to bypass missing "pip" executable links
-    $PYTHON_VENV -m pip install --upgrade pip
-    $PYTHON_VENV -m pip install -r requirements.txt
-    
+    # shellcheck disable=SC2086
+    $PYTHON_VENV -m pip install --upgrade pip $PIP_MIRROR_ARGS
+    # shellcheck disable=SC2086
+    $PYTHON_VENV -m pip install -r requirements.txt --only-binary sherpa-onnx,sherpa-onnx-core $PIP_MIRROR_ARGS
+
     if [ $? -ne 0 ]; then
         echo "[ERROR] Failed to install dependencies."
         echo "If pip is completely missing, try: sudo apt install python3-pip python3-venv"

@@ -39,3 +39,23 @@ DEVLOG_*.md
 
 # Old Mac launcher
 EdgeTTS-Mac-venv.command
+
+# Distribution packages (uploaded to GitHub Releases instead)
+dist/
+
+# TTS readback test outputs (development-only benchmarks)
+tts_readback_outputs/
+
+# System overview doc (AI/developer reference, not user-facing)
+SYSTEM_OVERVIEW.md
+
+# Transcription output files
+*_转写.srt
+*_转写.txt
+*_转写.vtt
+
+# Official reference subtitles (additional patterns)
+*_official.srt
+
+# Duplicate requirements
+requirements - Copy.txt
