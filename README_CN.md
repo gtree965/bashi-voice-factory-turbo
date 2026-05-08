@@ -1,8 +1,15 @@
-# 巴适声工厂 (Bashi Voice Factory)
+# 巴适声工厂 · 极速版 (Bashi Voice Factory Turbo)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-3.11-blue.svg)](https://github.com/gtree965/bashi-voice-factory-turbo/releases)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 
 **版本:** 3.11
 
 一个美观的语音与文字双向转换桌面级网页应用。**文字转语音 (TTS)** 基于微软 Edge TTS 引擎，支持 **14 种语言**、50+ 神经网络声音，至多 50,000 字符长文本生成，TXT 文件上传，多格式导出，以及智能分段跟读。**语音转文字 (STT)** 搭载双引擎：**SenseVoice**（中英日韩粤多语种，242MB）+ **Parakeet TDT**（英文专用，NVIDIA出品，WER仅1.7%，661MB）。全程本地离线转写，隐私无忧。
+
+> 🔒 需要完全离线、隐私至上的版本？请关注 [巴适声工厂 · 隐私版 (Bashi Voice Factory Private)](https://github.com/gtree965/bashi-voice-factory-private) — TTS 与 STT 均使用本地模型，零云端依赖。
 
 **作者:** Alex Li (ncorecpu@gmail.com)
 

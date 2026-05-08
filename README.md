@@ -1,8 +1,15 @@
-# Bashi Voice Factory (巴适声工厂)
+# Bashi Voice Factory Turbo (巴适声工厂 · 极速版)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-3.11-blue.svg)](https://github.com/gtree965/bashi-voice-factory-turbo/releases)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 
 **Version:** 3.11
 
 A beautiful web application for bidirectional voice conversion. The **TTS** (text-to-speech) side, powered by Microsoft Edge TTS, supports **14 languages** with 50+ neural voices, up to 50,000 characters of continuous long text, TXT file upload, multi-format export, and smart chunking for shadowing practice. The **STT** (speech-to-text) side features two production-grade offline engines: **SenseVoice** (multilingual: Chinese/English/Japanese/Korean/Cantonese) and **Parakeet TDT** (English specialist, NVIDIA, ~1.7% WER). All transcription runs locally — no audio is uploaded to the cloud.
+
+> 🔒 Looking for a fully offline, privacy-first edition? Check out [Bashi Voice Factory Private (巴适声工厂 · 隐私版)](https://github.com/gtree965/bashi-voice-factory-private) — local TTS & STT with zero cloud dependency.
 
 **Author:** Alex Li (ncorecpu@gmail.com)
 
