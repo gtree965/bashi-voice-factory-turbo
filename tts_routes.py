@@ -611,13 +611,11 @@ def get_voices():
 @tts_bp.route("/api/all-voices")
 def get_all_available_voices():
     """Return all available Edge TTS voices."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     try:
-        voices = loop.run_until_complete(get_all_voices())
+        voices = asyncio.run(get_all_voices())
         return jsonify(voices)
-    finally:
-        loop.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @tts_bp.route("/api/synthesize", methods=["POST"])
@@ -638,11 +636,8 @@ def synthesize():
             "error_zh": "文本过长，最多50000个字符。"
         }), 400
     
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
     try:
-        filename = loop.run_until_complete(generate_speech(text, voice, rate, pitch))
+        filename = asyncio.run(generate_speech(text, voice, rate, pitch))
         
         return jsonify({
             "success": True,
@@ -654,8 +649,6 @@ def synthesize():
             "error": str(e),
             "error_zh": f"合成失败: {str(e)}"
         }), 500
-    finally:
-        loop.close()
 
 
 @tts_bp.route("/api/synthesize-long", methods=["POST"])
@@ -681,8 +674,6 @@ def synthesize_long():
     base_filename = uuid.uuid4().hex
     
     def generate():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
         try:
             temp_files = []
             for i, chunk in enumerate(chunks):
@@ -690,7 +681,7 @@ def synthesize_long():
                 yield f"data: {json.dumps({'status': 'generating', 'chunk': i + 1, 'total': total_chunks})}\n\n"
                 
                 # Generate chunk
-                chunk_filename = loop.run_until_complete(generate_speech(chunk, voice, rate, pitch))
+                chunk_filename = asyncio.run(generate_speech(chunk, voice, rate, pitch))
                 temp_files.append(chunk_filename)
                 
             # Done generation, start merging
@@ -712,8 +703,6 @@ def synthesize_long():
                 
         except Exception as e:
             yield f"data: {json.dumps({'status': 'error', 'error': str(e)})}\n\n"
-        finally:
-            loop.close()
             
     return Response(stream_with_context(generate()), content_type='text/event-stream')
 
@@ -755,11 +744,8 @@ def synthesize_sentences():
     if not chunks:
         return jsonify({"error": "No text chunks found", "error_zh": "未找到文本块"}), 400
     
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
     try:
-        results = loop.run_until_complete(generate_sentence_audio(chunks, voice, rate, pitch))
+        results = asyncio.run(generate_sentence_audio(chunks, voice, rate, pitch))
         return jsonify({
             "success": True,
             "sentences": results,
@@ -772,8 +758,6 @@ def synthesize_sentences():
             "error": str(e),
             "error_zh": f"合成失败: {str(e)}"
         }), 500
-    finally:
-        loop.close()
 
 
 ALLOWED_FORMATS = {"wav", "ogg", "flac"}
@@ -824,6 +808,12 @@ def convert_audio():
 @tts_bp.route("/api/download/<filename>")
 def download_audio(filename):
     """Download the generated audio file."""
+    try:
+        safe_path = (OUTPUT_DIR / filename).resolve()
+        safe_path.relative_to(OUTPUT_DIR.resolve())
+    except ValueError:
+        return jsonify({"error": "Invalid filename"}), 400
+        
     try:
         return send_from_directory(OUTPUT_DIR, filename, as_attachment=True)
     except FileNotFoundError:

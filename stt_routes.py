@@ -308,8 +308,12 @@ def get_result(job_id):
 
 def format_timestamp(seconds: float, separator: str = ",") -> str:
     """Format seconds into HH:MM:SS,mmm or HH:MM:SS.mmm"""
-    ms = int((seconds % 1) * 1000)
-    m, s = divmod(int(seconds), 60)
+    ms = round((seconds % 1) * 1000)
+    s = int(seconds)
+    if ms >= 1000:
+        ms = 0
+        s += 1
+    m, s = divmod(s, 60)
     h, m = divmod(m, 60)
     return f"{h:02d}:{m:02d}:{s:02d}{separator}{ms:03d}"
 
