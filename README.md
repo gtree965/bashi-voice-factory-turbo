@@ -1,3 +1,5 @@
+**English** | [中文文档](README_CN.md)
+
 # Bashi Voice Factory Turbo (巴适声工厂 · 极速版)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
