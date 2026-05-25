@@ -11,7 +11,7 @@
 
 A beautiful web application for bidirectional voice conversion. The **TTS** (text-to-speech) side, powered by Microsoft Edge TTS, supports **14 languages** with 50+ neural voices, up to 50,000 characters of continuous long text, TXT file upload, multi-format export, and smart chunking for shadowing practice. The **STT** (speech-to-text) side features two production-grade offline engines: **SenseVoice** (multilingual: Chinese/English/Japanese/Korean/Cantonese) and **Parakeet TDT** (English specialist, NVIDIA, ~1.7% WER). All transcription runs locally — no audio is uploaded to the cloud.
 
-> 🔒 Looking for a fully offline, privacy-first edition? Check out [Bashi Voice Factory Private (巴适声工厂 · 隐私版)](https://github.com/gtree965/bashi-voice-factory-private) — local TTS & STT with zero cloud dependency.
+> 🔒 Looking for a fully offline, privacy-first edition? Check out [Bashi Voice Factory Privacy Edition (巴适声工厂 · 隐私版)](https://github.com/gtree965/bashi-voice-factory-privacy) — local TTS & STT with zero cloud dependency.
 
 **Author:** Alex Li (ncorecpu@gmail.com)
 
