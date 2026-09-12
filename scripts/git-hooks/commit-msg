@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+root=$(git rev-parse --show-toplevel) || exit 1
+cd "$root"
+guard="$root/scripts/git-hooks/pre_commit_guard.py"
+for candidate in "$root/python-3.12.10-embed-amd64/python.exe" \
+                 "$root/.venv/Scripts/python.exe" "$root/venv/Scripts/python.exe"; do
+    if [ -x "$candidate" ]; then
+        exec "$candidate" "$guard" --commit-msg "$1"
+    fi
+done
+for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+        exec "$candidate" "$guard" --commit-msg "$1"
+    fi
+done
+echo '[commit guard] No Python interpreter found. Restore the project environment.' >&2
+exit 1
